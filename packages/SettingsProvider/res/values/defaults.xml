@@ -44,7 +44,7 @@
 
     <bool name="def_bluetooth_on">false</bool>
     <bool name="def_wifi_display_on">false</bool>
-    <bool name="def_install_non_market_apps">false</bool>
+    <bool name="def_install_non_market_apps">true</bool>
     <bool name="def_package_verifier_enable">true</bool>
     <!-- Comma-separated list of location providers.
          Network location is off by default because it requires
@@ -232,5 +232,6 @@
     <!-- Default for Settings.Global.CAPTIVE_PORTAL_DETECTION_ENABLED -->
     <integer name="def_captive_portal_detection_enabled" translatable="false">1</integer>
 
-    <string name="config_default_input_method" translatable="false">com.sohu.inputmethod.sogou/.SogouIME</string>
+    <!-- <string name="config_default_input_method" translatable="false">com.sohu.inputmethod.sogou/.SogouIME</string> -->
+    <string name="config_default_input_method" translatable="false">com.iflytek.inputmethod/.FlyIME</string>
 </resources>

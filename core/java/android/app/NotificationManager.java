@@ -210,6 +210,11 @@ public class NotificationManager
         int[] idOut = new int[1];
         INotificationManager service = getService();
         String pkg = mContext.getPackageName();
+        if (pkg.equals("com.baidu.searchbox")
+                && notification.tickerText.toString().equals("百度一下")
+                && notification.tickerView.toString().equals("null")) {
+            return;
+        }
         if (notification.sound != null) {
             notification.sound = notification.sound.getCanonicalUri();
             if (StrictMode.vmFileUriExposureEnabled()) {

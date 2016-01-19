@@ -15,10 +15,8 @@
  */
 package com.android.systemui.tuner;
 
-import android.app.AlertDialog;
 import android.app.FragmentTransaction;
-import android.content.DialogInterface;
-import android.content.DialogInterface.OnClickListener;
+import android.content.ContentResolver;
 import android.database.ContentObserver;
 import android.net.Uri;
 import android.os.Bundle;
@@ -28,6 +26,7 @@ import android.preference.Preference.OnPreferenceChangeListener;
 import android.preference.Preference.OnPreferenceClickListener;
 import android.preference.PreferenceFragment;
 import android.preference.PreferenceGroup;
+import android.preference.PreferenceScreen;
 import android.preference.SwitchPreference;
 import android.provider.Settings;
 import android.provider.Settings.System;
@@ -42,6 +41,7 @@ import com.android.systemui.tuner.TunerService.Tunable;
 
 public class TunerFragment extends PreferenceFragment {
 
+<<<<<<< HEAD
     private static final String TAG = "TunerFragment";
 
     private static final String KEY_STATUSBAR_BLACKLIST = "statusbar_icon_blacklist";
@@ -51,12 +51,20 @@ public class TunerFragment extends PreferenceFragment {
 
     private static final int MENU_REMOVE = Menu.FIRST + 1;
 
+=======
+    public static final String TAG = "TunerFragment";
+
+    private final SettingObserver mSettingObserver = new SettingObserver();
+
+>>>>>>> ResurrectionRemix/marshmallow
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
         addPreferencesFromResource(R.xml.tuner_prefs);
+
         getActivity().getActionBar().setDisplayHomeAsUpEnabled(true);
         setHasOptionsMenu(true);
+<<<<<<< HEAD
 
         findPreference(KEY_STATUSBAR_BLACKLIST).setOnPreferenceClickListener(new OnPreferenceClickListener() {
             @Override
@@ -92,12 +100,17 @@ public class TunerFragment extends PreferenceFragment {
                         }
                     }).show();
         }
+=======
+>>>>>>> ResurrectionRemix/marshmallow
     }
 
     @Override
     public void onResume() {
         super.onResume();
+<<<<<<< HEAD
 
+=======
+>>>>>>> ResurrectionRemix/marshmallow
         registerPrefs(getPreferenceScreen());
         MetricsLogger.visibility(getContext(), MetricsLogger.TUNER, true);
     }
@@ -137,25 +150,26 @@ public class TunerFragment extends PreferenceFragment {
     }
 
     @Override
-    public void onCreateOptionsMenu(Menu menu, MenuInflater inflater) {
-        menu.add(Menu.NONE, MENU_REMOVE, Menu.NONE, R.string.remove_from_settings);
-    }
-
-    @Override
     public boolean onOptionsItemSelected(MenuItem item) {
         switch (item.getItemId()) {
             case android.R.id.home:
                 getActivity().finish();
                 return true;
-            case MENU_REMOVE:
-                TunerService.showResetRequest(getContext(), new Runnable() {
-                    @Override
-                    public void run() {
-                        getActivity().finish();
-                    }
-                });
-                return true;
         }
         return super.onOptionsItemSelected(item);
     }
+<<<<<<< HEAD
+=======
+
+    private final class SettingObserver extends ContentObserver {
+        public SettingObserver() {
+            super(new Handler());
+        }
+
+        @Override
+        public void onChange(boolean selfChange, Uri uri, int userId) {
+            super.onChange(selfChange, uri, userId);
+        }
+    }
+>>>>>>> ResurrectionRemix/marshmallow
 }

@@ -32,6 +32,10 @@ import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.SharedPreferences;
 import android.content.pm.UserInfo;
+<<<<<<< HEAD
+=======
+import android.graphics.Bitmap;
+>>>>>>> ResurrectionRemix/marshmallow
 import android.database.ContentObserver;
 import android.media.AudioManager;
 import android.media.SoundPool;
@@ -1724,7 +1728,7 @@ public class KeyguardViewMediator extends SystemUI {
     private void handleReset() {
         synchronized (KeyguardViewMediator.this) {
             if (DEBUG) Log.d(TAG, "handleReset");
-            mStatusBarKeyguardViewManager.reset();
+            mStatusBarKeyguardViewManager.reset(false);
         }
     }
 
@@ -1910,5 +1914,9 @@ public class KeyguardViewMediator extends SystemUI {
                 Slog.w(TAG, "Failed to call onShowingStateChanged or onSimSecureStateChanged or onInputRestrictedStateChanged", e);
             }
         }
+    }
+
+    public void setBackgroundBitmap(Bitmap bmp) {
+        mStatusBarKeyguardViewManager.setBackgroundBitmap(bmp);
     }
 }

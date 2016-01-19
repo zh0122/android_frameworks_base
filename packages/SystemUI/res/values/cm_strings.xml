@@ -1,5 +1,24 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!--
+<<<<<<< HEAD
+=======
+
+/**
+ * Copyright (c) 2009, The Android Open Source Project
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License"); 
+ * you may not use this file except in compliance with the License. 
+ * You may obtain a copy of the License at 
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0 
+ *
+ * Unless required by applicable law or agreed to in writing, software 
+ * distributed under the License is distributed on an "AS IS" BASIS, 
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. 
+ * See the License for the specific language governing permissions and 
+ * limitations under the License.
+ */
+>>>>>>> ResurrectionRemix/marshmallow
      Copyright (C) 2012-2015 The CyanogenMod Project
 
      Licensed under the Apache License, Version 2.0 (the "License");
@@ -13,8 +32,17 @@
      WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
      See the License for the specific language governing permissions and
      limitations under the License.
+<<<<<<< HEAD
+=======
+
+>>>>>>> ResurrectionRemix/marshmallow
 -->
 <resources xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">
+
+    <!-- Content description of the power button for accessibility (not shown on the screen). [CHAR LIMIT=NONE] -->
+    <string name="accessibility_power">Power</string>
+    <!-- Content description of the notification button for accessibility (not shown on the screen). [CHAR LIMIT=NONE] -->
+    <string name="accessibility_notifications">Notifications</string>
 
     <!-- Content description of the data connection type HSPA+ for accessibility (not shown on the screen). [CHAR LIMIT=NONE] -->
     <string name="accessibility_data_connection_hspap">HSPA+</string>
@@ -50,6 +78,8 @@
     <string name="navbar_menu_conditional_button">Menu (autoHide) button</string>
     <string name="navbar_menu_always_button">Menu (alwaysShow) button</string>
     <string name="navbar_menu_big_button">Menu button</string>
+    <string name="navbar_power_button">Power button</string>
+    <string name="navbar_notifications_button">Notifications button</string>
     <string name="accessibility_dpad_left">Cursor left</string>
     <string name="accessibility_dpad_right">Cursor right</string>
 
@@ -60,6 +90,8 @@
     <string name="advanced_dev_option_force_stop">Force stop</string>
     <!-- Title shown in recents popup for uninstalling the application -->
     <string name="advanced_dev_option_uninstall">Uninstall</string>
+
+
 
     <!-- Content description of the light brightness slider (not shown on the screen). [CHAR LIMIT=NONE] -->
     <string name="accessibility_notification_brightness">Light brightness</string>
@@ -80,9 +112,8 @@
     <!-- Lights settings, LED notification -->
     <string name="led_notification_title">Light settings</string>
     <string name="led_notification_text">LED light enabled by settings</string>
-
-    <string name="qs_tile_edit_header_instruction">Press and hold tiles to rearrange</string>
-    <string name="quick_settings_edit_label">Edit tiles</string>
+    <string name="qs_tile_edit_header_instruction">Press and hold a tile to edit</string>
+    <string name="quick_settings_edit_label">Edit Tiles</string>
     <string name="quick_settings_cannot_delete_edit_tile">Cannot delete the Edit tile</string>
     <string name="qs_tiles_reset_confirmation">Reset quick settings tiles to default configuration?</string>
     <string name="quick_settings_tile_reset_to_default">Reset to default layout</string>
@@ -90,6 +121,13 @@
     <string name="quick_settings_title_tiles">Tiles</string>
     <string name="quick_settings_title_show_weather">Show weather</string>
     <string name="quick_settings_title_enlarge_first_row">Enlarge first row</string>
+
+    <!-- The text for the button in the notification window-shade that clears
+         all of the currently visible notifications. [CHAR LIMIT=10]-->
+    <string name="clear_recents">Close all recent</string>
+     
+    <!-- Weather string format in expanded statusbar header -->
+    <string name="weather_info_not_available">Not connected</string>
 
     <!-- Screen pinning dialog description (for devices without navbar) -->
     <string name="screen_pinning_description_no_navbar">This keeps it in view until you unpin. Touch and hold the Back button to unpin.</string>
@@ -101,7 +139,10 @@
     <string name="quick_settings_nfc_label">NFC</string>
     <string name="quick_settings_profiles">System profiles</string>
     <string name="quick_settings_profiles_off">Profiles disabled</string>
+<<<<<<< HEAD
     <string name="quick_settings_heads_up_label">Heads up</string>
+=======
+>>>>>>> ResurrectionRemix/marshmallow
     <string name="quick_settings_battery_saver_label">Battery saver</string>
 
     <!-- Content description of the sync tile in quick settings when off (not shown on the screen). [CHAR LIMIT=NONE] -->
@@ -117,9 +158,12 @@
     <string name="quick_settings_volume_panel_label">Volume panel</string>
     <string name="quick_settings_usb_tether_label">USB tethering</string>
     <string name="quick_settings_screen_timeout_detail_title">Screen timeout</string>
+
+
     <string name="quick_settings_lockscreen_label">Lock screen</string>
     <string name="quick_settings_ambient_display_label">Ambient display</string>
     <string name="quick_settings_lockscreen_label_enforced">Lock screen enforced</string>
+
     <!-- Content description of the screen timeout tile in quick settings (not shown on the screen). [CHAR LIMIT=NONE] -->
     <string name="accessibility_quick_settings_screen_timeout">Screen timeout: <xliff:g id="timeout" example="30 seconds">%s</xliff:g>.</string>
 
@@ -170,6 +214,7 @@
     <!-- Announcement made when ambient display changes to on (not shown on the screen). [CHAR LIMIT=NONE] -->
     <string name="accessibility_quick_settings_ambient_display_changed_on">Ambient display turned on.</string>
 
+<<<<<<< HEAD
     <!-- Content description of the heads up tile in quick settings when off (not shown on the screen). [CHAR LIMIT=NONE] -->
     <string name="accessibility_quick_settings_heads_up_off">Heads up off.</string>
     <!-- Content description of the heads up tile in quick settings when on (not shown on the screen). [CHAR LIMIT=NONE] -->
@@ -179,6 +224,8 @@
     <string name="accessibility_quick_settings_heads_up_changed_off">Heads up turned off.</string>
     <!-- Announcement made when heads up changes to on (not shown on the screen). [CHAR LIMIT=NONE] -->
     <string name="accessibility_quick_settings_heads_up_changed_on">Heads up turned on.</string>
+=======
+>>>>>>> ResurrectionRemix/marshmallow
 
     <!-- Content description of the battery saver tile in quick settings when off (not shown on the screen). [CHAR LIMIT=NONE] -->
     <string name="accessibility_quick_settings_battery_saver_off">Battery saver off.</string>
@@ -189,7 +236,10 @@
     <string name="accessibility_quick_settings_battery_saver_changed_off">Battery saver turned off.</string>
     <!-- Announcement made when battery saver changes to on (not shown on the screen). [CHAR LIMIT=NONE] -->
     <string name="accessibility_quick_settings_battery_saver_changed_on">Battery saver turned on.</string>
+<<<<<<< HEAD
 
+=======
+>>>>>>> ResurrectionRemix/marshmallow
     <!-- Dynamic tiles -->
     <string name="quick_settings_dynamic_tile_detail_title">Dynamic tile</string>
     <string name="dynamic_qs_tile_next_alarm_label">Next alarm</string>

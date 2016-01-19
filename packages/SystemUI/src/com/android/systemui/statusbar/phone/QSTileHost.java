@@ -42,6 +42,7 @@ import com.android.systemui.qs.tiles.AirplaneModeTile;
 import com.android.systemui.qs.tiles.AmbientDisplayTile;
 import com.android.systemui.qs.tiles.BatterySaverTile;
 import com.android.systemui.qs.tiles.BluetoothTile;
+import com.android.systemui.qs.tiles.BrightnessTile;
 import com.android.systemui.qs.tiles.CastTile;
 import com.android.systemui.qs.tiles.CellularTile;
 import com.android.systemui.qs.tiles.ColorInversionTile;
@@ -49,17 +50,33 @@ import com.android.systemui.qs.tiles.CompassTile;
 import com.android.systemui.qs.tiles.CustomQSTile;
 import com.android.systemui.qs.tiles.DndTile;
 import com.android.systemui.qs.tiles.EditTile;
+import com.android.systemui.qs.tiles.ExpandedDesktopTile;
 import com.android.systemui.qs.tiles.FlashlightTile;
 import com.android.systemui.qs.tiles.HeadsUpTile;
 import com.android.systemui.qs.tiles.HotspotTile;
 import com.android.systemui.qs.tiles.IntentTile;
 import com.android.systemui.qs.tiles.LiveDisplayTile;
 import com.android.systemui.qs.tiles.LocationTile;
+import com.android.systemui.qs.tiles.AppCircleBarTile;
+import com.android.systemui.qs.tiles.AppsidebarTile;
+import com.android.systemui.qs.tiles.KernelAdiutorTile;
+import com.android.systemui.qs.tiles.NavBarTile;
+import com.android.systemui.qs.tiles.SystemUIRestartTile;
+import com.android.systemui.qs.tiles.PieTile;
+import com.android.systemui.qs.tiles.GestureAnyWhereTile;
+import com.android.systemui.qs.tiles.ScreenrecordTile;
 import com.android.systemui.qs.tiles.LockscreenToggleTile;
+import com.android.systemui.qs.tiles.MusicTile;
+import com.android.systemui.qs.tiles.RRTile;
+import com.android.systemui.qs.tiles.LteTile;
+import com.android.systemui.qs.tiles.ThemesTile;
 import com.android.systemui.qs.tiles.NfcTile;
 import com.android.systemui.qs.tiles.PerfProfileTile;
 import com.android.systemui.qs.tiles.ProfilesTile;
+import com.android.systemui.qs.tiles.RebootTile;
 import com.android.systemui.qs.tiles.RotationLockTile;
+import com.android.systemui.qs.tiles.ScreenOffTile;
+import com.android.systemui.qs.tiles.ScreenshotTile;
 import com.android.systemui.qs.tiles.ScreenTimeoutTile;
 import com.android.systemui.qs.tiles.SyncTile;
 import com.android.systemui.qs.tiles.UsbTetherTile;
@@ -79,10 +96,12 @@ import com.android.systemui.statusbar.policy.UserSwitcherController;
 import com.android.systemui.statusbar.policy.ZenModeController;
 import com.android.systemui.tuner.TunerService;
 import com.android.systemui.tuner.TunerService.Tunable;
+import android.telephony.TelephonyManager;
 
 import cyanogenmod.app.CustomTileListenerService;
 import cyanogenmod.app.StatusBarPanelCustomTile;
 import cyanogenmod.providers.CMSettings;
+import com.android.internal.telephony.PhoneConstants;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -195,6 +214,19 @@ public class QSTileHost implements QSTile.Host, Tunable {
     @Override
     public void startActivityDismissingKeyguard(final Intent intent) {
         mStatusBar.postStartActivityDismissingKeyguard(intent, 0);
+    }
+
+   public static boolean deviceSupportsLte(Context ctx) {
+        final TelephonyManager tm = (TelephonyManager)
+                ctx.getSystemService(Context.TELEPHONY_SERVICE);
+        return (tm.getLteOnCdmaMode() == PhoneConstants.LTE_ON_CDMA_TRUE)
+                || tm.getLteOnGsmMode() != 0;
+    }
+ public static boolean deviceSupportsDdsSupported(Context context) {
+        TelephonyManager tm = (TelephonyManager)
+                context.getSystemService(Context.TELEPHONY_SERVICE);
+        return tm.isMultiSimEnabled()
+                && tm.getMultiSimConfiguration() == TelephonyManager.MultiSimVariants.DSDA;
     }
 
     @Override
@@ -358,10 +390,34 @@ public class QSTileHost implements QSTile.Host, Tunable {
         else if (tileSpec.equals("usb_tether")) return new UsbTetherTile(this);
         else if (tileSpec.equals("screen_timeout")) return new ScreenTimeoutTile(this);
         else if (tileSpec.equals("performance")) return new PerfProfileTile(this);
+<<<<<<< HEAD
         else if (tileSpec.equals("lockscreen")) return  new LockscreenToggleTile(this);
         else if (tileSpec.equals("ambient_display")) return new AmbientDisplayTile(this);
         else if (tileSpec.equals("live_display")) return new LiveDisplayTile(this);
         else if (tileSpec.equals("heads_up")) return new HeadsUpTile(this);
+=======
+	else if (tileSpec.equals("lockscreen")) return  new LockscreenToggleTile(this);
+        else if (tileSpec.equals("ambient_display")) return new AmbientDisplayTile(this);
+        else if (tileSpec.equals("live_display")) return new LiveDisplayTile(this);
+        else if (tileSpec.equals("brightness")) return new BrightnessTile(this);
+        else if (tileSpec.equals("screen_off")) return new ScreenOffTile(this);
+        else if (tileSpec.equals("screenshot")) return new ScreenshotTile(this);
+        else if (tileSpec.equals("expanded_desktop")) return new ExpandedDesktopTile(this);
+        else if (tileSpec.equals("music")) return new MusicTile(this);
+        else if (tileSpec.equals("reboot")) return new RebootTile(this);
+	else if (tileSpec.equals("configurations")) return new RRTile(this);
+        else if (tileSpec.equals("heads_up")) return new HeadsUpTile(this);
+	else if (tileSpec.equals("lte")) return new LteTile(this);
+	else if (tileSpec.equals("themes")) return new ThemesTile(this);
+	else if (tileSpec.equals("navbar")) return new NavBarTile(this);
+	else if (tileSpec.equals("appcirclebar")) return new AppCircleBarTile(this);
+	else if (tileSpec.equals("kernel_adiutor")) return new KernelAdiutorTile(this);
+	else if (tileSpec.equals("screenrecord")) return new ScreenrecordTile(this);
+	else if (tileSpec.equals("pie")) return new PieTile(this);
+	else if (tileSpec.equals("appsidebar")) return new AppsidebarTile(this);
+	else if (tileSpec.equals("restartui")) return new SystemUIRestartTile(this);
+	else if (tileSpec.equals("gesture_anywhere")) return new GestureAnyWhereTile(this);
+>>>>>>> ResurrectionRemix/marshmallow
         else if (tileSpec.equals("battery_saver")) return new BatterySaverTile(this);
         else if (tileSpec.startsWith(IntentTile.PREFIX)) return IntentTile.create(this,tileSpec);
         else throw new IllegalArgumentException("Bad tile spec: " + tileSpec);
@@ -448,8 +504,30 @@ public class QSTileHost implements QSTile.Host, Tunable {
         else if (spec.equals("performance")) return R.string.qs_tile_performance;
         else if (spec.equals("lockscreen")) return R.string.quick_settings_lockscreen_label;
         else if (spec.equals("ambient_display")) return R.string.quick_settings_ambient_display_label;
+<<<<<<< HEAD
         else if (spec.equals("live_display")) return R.string.live_display_title;
         else if (spec.equals("heads_up")) return R.string.quick_settings_heads_up_label;
+=======
+	else if (spec.equals("live_display")) return R.string.live_display_title;
+        else if (spec.equals("music")) return R.string.quick_settings_music_label;
+        else if (spec.equals("brightness")) return R.string.quick_settings_brightness_label;
+        else if (spec.equals("screen_off")) return R.string.quick_settings_screen_off_label;
+        else if (spec.equals("screenshot")) return R.string.quick_settings_screenshot_label;
+        else if (spec.equals("expanded_desktop")) return R.string.quick_settings_expanded_desktop_label;
+        else if (spec.equals("reboot")) return R.string.quick_settings_reboot_label;
+        else if (spec.equals("configurations")) return R.string.quick_settings_rrtools;
+	else if (spec.equals("heads_up")) return R.string.quick_settings_heads_up_label;
+	else if (spec.equals("lte")) return R.string.qs_lte_label;
+	else if (spec.equals("themes")) return R.string.quick_settings_themes;
+	else if (spec.equals("navbar")) return R.string.quick_settings_navbar_title;
+	else if (spec.equals("appcirclebar")) return R.string.quick_settings_appcirclebar_title;
+	else if (spec.equals("kernel_adiutor")) return R.string.quick_settings_kernel_title;
+	else if (spec.equals("screenrecord")) return R.string.quick_settings_screenrecord;
+	else if (spec.equals("pie")) return R.string.quick_settings_pie;
+	else if (spec.equals("appsidebar")) return R.string.quick_settings_app_sidebar;
+	else if (spec.equals("restartui")) return R.string.quick_settings_systemui_restart_label;
+        else if (spec.equals("gesture_anywhere")) return R.string.quick_settings_gesture_anywhere_label;
+>>>>>>> ResurrectionRemix/marshmallow
         else if (spec.equals("battery_saver")) return R.string.quick_settings_battery_saver_label;
         return 0;
     }
@@ -479,8 +557,30 @@ public class QSTileHost implements QSTile.Host, Tunable {
         else if (spec.equals("lockscreen")) return R.drawable.ic_qs_lock_screen_on;
         else if (spec.equals("ambient_display")) return R.drawable.ic_qs_ambientdisplay_on;
         else if (spec.equals("live_display")) return R.drawable.ic_livedisplay_auto;
+<<<<<<< HEAD
         else if (spec.equals("heads_up")) return R.drawable.ic_qs_heads_up_on;
         else if (spec.equals("heads_up")) return R.drawable.ic_qs_battery_saver_on;
+=======
+        else if (spec.equals("music")) return R.drawable.ic_qs_media_play;
+        else if (spec.equals("brightness")) return R.drawable.ic_qs_brightness_auto_on;
+        else if (spec.equals("screen_off")) return R.drawable.ic_qs_power;
+        else if (spec.equals("screenshot")) return R.drawable.ic_qs_screenshot;
+        else if (spec.equals("expanded_desktop")) return R.drawable.ic_qs_expanded_desktop;
+	else if (spec.equals("reboot")) return R.drawable.ic_qs_reboot;
+	else if (spec.equals("configurations")) return R.drawable.ic_qs_rrtools;
+	else if (spec.equals("heads_up")) return R.drawable.ic_qs_heads_up_on;
+	else if (spec.equals("lte")) return R.drawable.ic_qs_lte_on;
+	else if (spec.equals("themes")) return R.drawable.ic_qs_themes;
+	else if (spec.equals("navbar")) return R.drawable.ic_qs_navbar_on;
+	else if (spec.equals("appcirclebar")) return R.drawable.ic_qs_appcirclebar_on;
+	else if (spec.equals("kernel_adiutor")) return R.drawable.ic_qs_kernel_adiutor;	
+	else if (spec.equals("screenrecord")) return R.drawable.ic_qs_screenrecord;	
+	else if (spec.equals("pie")) return R.drawable.ic_qs_pie_on;	
+	else if (spec.equals("appsidebar")) return R.drawable.ic_qs_appsidebar_on;
+	else if (spec.equals("restartui")) return R.drawable.ic_qs_systemui_restart;
+	else if (spec.equals("gesture_anywhere")) return R.drawable.ic_qs_gestures_on;
+        else if (spec.equals("battery_saver")) return R.drawable.ic_qs_battery_saver_on;
+>>>>>>> ResurrectionRemix/marshmallow
         return 0;
     }
 

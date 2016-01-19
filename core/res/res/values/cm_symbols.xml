@@ -65,7 +65,7 @@
     <java-symbol type="string" name="theme_reset_notification_body" />
 
     <!-- global actions (zen mode buttons) -->
-    <java-symbol type="id" name="option4" />
+    <!--java-symbol type="id" name="option4" /-->
 
     <!-- LED pulse -->
     <java-symbol type="bool" name="config_ledCanPulse" />
@@ -112,9 +112,12 @@
     <!-- Advanced settings switch -->
     <java-symbol type="string" name="lock_to_app_toast_no_navbar" />
 
+<<<<<<< HEAD
     <!-- PlatLogo -->
     <java-symbol type="drawable" name="platlogo_cm" />
 
+=======
+>>>>>>> ResurrectionRemix/marshmallow
     <!-- Automatic brightness enhancements -->
     <java-symbol type="integer" name="config_autoBrightnessBrighteningLightFastDebounce"/>
 
@@ -142,7 +145,10 @@
 
     <!-- Wifi idle time default -->
     <java-symbol type="integer" name="def_wifi_idle_ms" />
+<<<<<<< HEAD
 
     <!-- Carrier Apps -->
     <java-symbol type="array" name="config_enabledPreinstalledCarrierApps" />
+=======
+>>>>>>> ResurrectionRemix/marshmallow
 </resources>

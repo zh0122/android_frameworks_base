@@ -29,6 +29,7 @@
         <item>@string/reboot_soft</item>
         <item>@string/reboot_recovery</item>
         <item>@string/reboot_bootloader</item>
+	<item>@string/reboot_systemui</item>
     </array>
 
     <!-- Do not translate. Defines the shutdown actions passed to the kernel.
@@ -38,6 +39,7 @@
         <item>soft_reboot</item>
         <item>recovery</item>
         <item>bootloader</item>
+	<item>systemui_reboot</item>
      </string-array>
 
     <!-- List of packages that should not be themed.
@@ -211,10 +213,13 @@
         <item>1</item>
         <item>3</item>
     </string-array>
+<<<<<<< HEAD
 
 
     <!-- A list of pre-installed applications that will be treated as carrier apps,
          regardless of the SIM inserted. These applications will be granted phone and
          location permissions, and must obtain user content through other means -->
     <string-array name="config_enabledPreinstalledCarrierApps" translatable="false" />
+=======
+>>>>>>> ResurrectionRemix/marshmallow
 </resources>

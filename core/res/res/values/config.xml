@@ -35,6 +35,7 @@
        <item><xliff:g id="id">nfc</xliff:g></item>
        <item><xliff:g id="id">tty</xliff:g></item>
        <item><xliff:g id="id">speakerphone</xliff:g></item>
+       <item><xliff:g id="id">headset</xliff:g></item>
        <item><xliff:g id="id">zen</xliff:g></item>
        <item><xliff:g id="id">mute</xliff:g></item>
        <item><xliff:g id="id">volume</xliff:g></item>
@@ -94,6 +95,12 @@
     <!-- The duration (in milliseconds) of the activity open/close and fragment open/close animations. -->
     <integer name="config_activityShortDur">150</integer>
     <integer name="config_activityDefaultDur">220</integer>
+
+    <!-- The duration (in milliseconds) of recent app screen animation. -->
+    <integer name="config_recentDefaultDur">300</integer>
+
+    <!-- The duration (in milliseconds) of recent app screen exit animation. -->
+    <integer name="config_recentExitDur">450</integer>
 
     <!-- Duration for the dim animation behind a dialog.  This may be either
          a percentage, which is relative to the duration of the enter/open
@@ -2117,15 +2124,20 @@
          on the current state of the device.
          Each item must be one of the following strings:
          "power" = Power off
-         "settings" = An action to launch settings
+         "reboot" = Reboot
+         "screenshot" = Take screenshot
+         "screenrecord" = Take screen recording
+         "profile" = Change phone's profile
          "airplane" = Airplane mode toggle
+         "users" = list of users
+         "settings" = An action to launch settings
+         "lockdown" = lock the phone down
          "bugreport" = Take bug report, if available
          "silent" = silent mode
-         "users" = list of users
          -->
     <string-array translatable="false" name="config_globalActionsList">
         <item>power</item>
-        <item>bugreport</item>
+        <item>reboot</item>
         <item>users</item>
     </string-array>
 
@@ -2457,7 +2469,7 @@
 
     <!-- Timeout in MS for how long you have to long-press the back key to
          kill the foreground app. -->
-    <integer name="config_backKillTimeout">2000</integer>
+    <integer name="config_backKillTimeout">750</integer>
 
     <!-- Setting to false will disable CM's IME switcher implementation for tablets -->
     <bool name="config_show_cmIMESwitcher">true</bool>
@@ -2502,9 +2514,13 @@
          is non-interactive. -->
     <bool name="config_cameraDoubleTapPowerGestureEnabled">true</bool>
 
+
     <!-- Support in Surfaceflinger for blur layers.
          NOTE: This requires additional hardware-specific code. -->
     <bool name="config_ui_blur_enabled">false</bool>
+
+    <!-- Sets whether IME switcher on statusbar should be shown or not. -->
+	<bool name="config_show_IMESwitcher">true</bool>
 
     <!-- When config_LTE_RSRP_threshold_type is set to "custom" -->
     <integer-array name="config_LTE_RSRP_custom_levels">
@@ -2515,6 +2531,7 @@
         <item>-98</item>
         <item>-44</item>
     </integer-array>
+
 
     <!-- The BT name of the keyboard packaged with the device. If this is defined, SystemUI will
          automatically try to pair with it when the device exits tablet mode. -->

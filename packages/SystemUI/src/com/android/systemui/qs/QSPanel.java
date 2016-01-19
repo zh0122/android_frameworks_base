@@ -103,16 +103,23 @@ public class QSPanel extends ViewGroup {
         mDetailSettingsButton = (TextView) mDetail.findViewById(android.R.id.button2);
         mDetailDoneButton = (TextView) mDetail.findViewById(android.R.id.button1);
         updateDetailText();
+	mBrightnessView = LayoutInflater.from(mContext).inflate(
+                R.layout.quick_settings_brightness_dialog, this, false);
         mDetail.setVisibility(GONE);
         mDetail.setClickable(true);
-        mBrightnessView = LayoutInflater.from(mContext).inflate(
-                R.layout.quick_settings_brightness_dialog, this, false);
         mFooter = new QSFooter(this, mContext);
         addView(mDetail);
         addView(mBrightnessView);
         addView(mFooter.getView());
         mClipper = new QSDetailClipper(mDetail);
         updateResources();
+
+	boolean brightnessIconEnabled = Settings.System.getIntForUser(
+            mContext.getContentResolver(), Settings.System.BRIGHTNESS_ICON,
+                1, UserHandle.USER_CURRENT) == 1;
+	boolean addtileenabled = Settings.System.getIntForUser(
+            mContext.getContentResolver(), Settings.System.PERSIST_ADD,
+                1, UserHandle.USER_CURRENT) == 1;
 
         mBrightnessController = new BrightnessController(getContext(),
                 (ImageView) findViewById(R.id.brightness_icon),
@@ -135,16 +142,37 @@ public class QSPanel extends ViewGroup {
         boolean brightnessSliderEnabled = CMSettings.System.getIntForUser(
             mContext.getContentResolver(), CMSettings.System.QS_SHOW_BRIGHTNESS_SLIDER,
                 1, UserHandle.USER_CURRENT) == 1;
+ 	boolean brightnessIconEnabled = Settings.System.getIntForUser(
+            mContext.getContentResolver(), Settings.System.BRIGHTNESS_ICON,
+                1, UserHandle.USER_CURRENT) == 1;
+        boolean addtileenabled = Settings.System.getIntForUser(
+            mContext.getContentResolver(), Settings.System.PERSIST_ADD,
+                1, UserHandle.USER_CURRENT) == 1;
         ToggleSlider brightnessSlider = (ToggleSlider) findViewById(R.id.brightness_slider);
+        ImageView brightnessIcon = (ImageView) findViewById(R.id.brightness_icon);
         if (brightnessSliderEnabled) {
+  	if (brightnessIconEnabled) {
+              brightnessIcon.setVisibility(VISIBLE);
+            } else {
+                brightnessIcon.setVisibility(GONE);
+            }
             mBrightnessView.setVisibility(VISIBLE);
             brightnessSlider.setVisibility(VISIBLE);
+            
         } else {
+		if(addtileenabled){
             mBrightnessView.setVisibility(GONE);
+            brightnessSlider.setVisibility(INVISIBLE);
+            brightnessIcon.setVisibility(GONE);	
+		}else{    
+	    mBrightnessView.setVisibility(GONE);
             brightnessSlider.setVisibility(GONE);
+            brightnessIcon.setVisibility(GONE);	
+	    }   
         }
+ 	
         updateResources();
-        return brightnessSliderEnabled;
+        return brightnessSliderEnabled;	
     }
 
     protected void updateDetailText() {
@@ -612,6 +640,12 @@ public class QSPanel extends ViewGroup {
         fireScanStateChanged(scanState);
     }
 
+    public void setQSShadeAlphaValue(int alpha) {
+        if (mDetail != null) {
+            mDetail.getBackground().setAlpha(alpha);
+        }
+    }
+
     private class H extends Handler {
         private static final int SHOW_DETAIL = 1;
         private static final int SET_TILE_VISIBILITY = 2;
@@ -664,7 +698,7 @@ public class QSPanel extends ViewGroup {
         public void onAnimationEnd(Animator animation) {
             // Only hide content if still in detail state.
             if (mDetailRecord != null) {
-                setGridContentVisibility(false);
+                setGridContentVisibility(true);
                 redrawTile();
             }
         }

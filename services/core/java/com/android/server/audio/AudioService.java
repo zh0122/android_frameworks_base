@@ -1237,10 +1237,7 @@ public class AudioService extends IAudioService.Stub {
 
             updateRingerModeAffectedStreams();
             readDockAudioSettings(cr);
-<<<<<<< HEAD
-=======
             mSafeVolumeEnabled = new Boolean(safeVolumeEnabled(cr));
->>>>>>> ResurrectionRemix/marshmallow
 
             mVolumeKeysControlRingStream = CMSettings.System.getIntForUser(cr,
                     CMSettings.System.VOLUME_KEYS_CONTROL_RING_STREAM, 1,
@@ -4843,12 +4840,9 @@ public class AudioService extends IAudioService.Stub {
                 Settings.Secure.VOLUME_LINK_NOTIFICATION), false, this);
             mContentResolver.registerContentObserver(CMSettings.System.getUriFor(
                 CMSettings.System.VOLUME_KEYS_CONTROL_RING_STREAM), false, this);
-<<<<<<< HEAD
-=======
             mContentResolver.registerContentObserver(Settings.System.getUriFor(
                 Settings.System.SAFE_HEADSET_VOLUME), false, this,
                 UserHandle.USER_ALL);
->>>>>>> ResurrectionRemix/marshmallow
         }
 
         @Override
@@ -4875,10 +4869,7 @@ public class AudioService extends IAudioService.Stub {
                     Settings.Global.DOCK_AUDIO_MEDIA_ENABLED))) {
                     readDockAudioSettings(mContentResolver);
                 }
-<<<<<<< HEAD
                 readDockAudioSettings(mContentResolver);
-=======
->>>>>>> ResurrectionRemix/marshmallow
 
                 boolean linkNotificationWithVolume = Settings.Secure.getInt(mContentResolver,
                         Settings.Secure.VOLUME_LINK_NOTIFICATION, 1) == 1;

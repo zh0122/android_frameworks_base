@@ -32,10 +32,7 @@ import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.SharedPreferences;
 import android.content.pm.UserInfo;
-<<<<<<< HEAD
-=======
 import android.graphics.Bitmap;
->>>>>>> ResurrectionRemix/marshmallow
 import android.database.ContentObserver;
 import android.media.AudioManager;
 import android.media.SoundPool;

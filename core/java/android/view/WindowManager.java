@@ -582,13 +582,6 @@ public interface WindowManager extends ViewManager {
         public static final int TYPE_RECENTS_OVERLAY = FIRST_SYSTEM_WINDOW+34;
 
         /**
-         * Window type: Windows that are layered within the keyguard
-         * This type is LAST_SYSTEM_WINDOW-1 to avoid future conflicts with AOSP
-         * @hide
-         */
-        public static final int TYPE_KEYGUARD_PANEL = FIRST_SYSTEM_WINDOW+998;
-
-        /**
          * End of types of system windows.
          */
         public static final int LAST_SYSTEM_WINDOW      = 2999;

@@ -18,10 +18,7 @@ package com.android.systemui.statusbar.phone;
 
 import android.content.ComponentCallbacks2;
 import android.content.Context;
-<<<<<<< HEAD
-=======
 import android.graphics.Bitmap;
->>>>>>> ResurrectionRemix/marshmallow
 import android.graphics.PixelFormat;
 import android.os.Bundle;
 import android.os.SystemClock;
@@ -264,11 +261,7 @@ public class StatusBarKeyguardViewManager {
         if (mUnlockFab != null && mUnlockFab.isAttachedToWindow() && !occluded) {
             hideUnlockFab();
         }
-<<<<<<< HEAD
-        reset();
-=======
         reset(false);
->>>>>>> ResurrectionRemix/marshmallow
     }
 
     public boolean isOccluded() {
@@ -593,13 +586,10 @@ public class StatusBarKeyguardViewManager {
         return mPhoneStatusBar.isKeyguardShowingMedia();
     }
 
-<<<<<<< HEAD
-=======
     public void setBackgroundBitmap(Bitmap bmp) {
         mPhoneStatusBar.setBackgroundBitmap(bmp);
     }
 
->>>>>>> ResurrectionRemix/marshmallow
     public void setKeyguardExternalViewFocus(boolean hasFocus) {
         if (hasFocus) {
             showUnlockFab();

@@ -213,13 +213,9 @@
         <item>1</item>
         <item>3</item>
     </string-array>
-<<<<<<< HEAD
-
 
     <!-- A list of pre-installed applications that will be treated as carrier apps,
          regardless of the SIM inserted. These applications will be granted phone and
          location permissions, and must obtain user content through other means -->
     <string-array name="config_enabledPreinstalledCarrierApps" translatable="false" />
-=======
->>>>>>> ResurrectionRemix/marshmallow
 </resources>

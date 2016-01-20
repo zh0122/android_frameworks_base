@@ -63,8 +63,6 @@
         android:background="@drawable/recents_button_bg"
         android:visibility="invisible"
         android:src="@drawable/recents_dismiss_light" />
-<<<<<<< HEAD
-=======
   <com.android.systemui.recents.views.FixedSizeImageView 
         android:id="@+id/lock_to_app_fab" 
         android:layout_width="48.0dip" 
@@ -75,5 +73,4 @@
         android:background="@drawable/recents_button_bg" 
         android:visibility="invisible"
         android:src="@drawable/ic_pin" />
->>>>>>> ResurrectionRemix/marshmallow
 </com.android.systemui.recents.views.TaskViewHeader>

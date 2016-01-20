@@ -63,8 +63,6 @@ public class KeyguardStatusBarView extends RelativeLayout {
     private int mSystemIconsSwitcherHiddenExpandedMargin;
     private Interpolator mFastOutSlowInInterpolator;
 
-<<<<<<< HEAD
-=======
     private ContentObserver mObserver = new ContentObserver(new Handler()) {
         public void onChange(boolean selfChange, Uri uri) {
             showStatusBarCarrier();
@@ -72,7 +70,6 @@ public class KeyguardStatusBarView extends RelativeLayout {
         }
     };
 
->>>>>>> ResurrectionRemix/marshmallow
     private UserInfoController mUserInfoController;
 
     public KeyguardStatusBarView(Context context, AttributeSet attrs) {

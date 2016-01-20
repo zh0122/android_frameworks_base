@@ -2819,11 +2819,7 @@ public class RemoteViews implements Parcelable, Filter {
     private Context getContextForResources(Context context, String themePackageName) {
         if (mApplication != null) {
             if (context.getUserId() == UserHandle.getUserId(mApplication.uid)
-<<<<<<< HEAD
                     && context.getPackageName().equals(mApplication.packageName)
-=======
-                     && context.getPackageName().equals(mApplication.packageName)
->>>>>>> ResurrectionRemix/marshmallow
                     && themePackageName == null) {
                 return context;
             }

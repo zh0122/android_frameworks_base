@@ -455,15 +455,10 @@ public class NavigationBarView extends LinearLayout implements BaseStatusBar.Nav
     }
 
     private void getIcons(Resources res) {
-<<<<<<< HEAD
-        mBackIcon = new BackButtonDrawable(res.getDrawable(R.drawable.ic_sysbar_back));
-	    mBackLandIcon = mBackIcon;
-=======
         mBackIcon = res.getDrawable(R.drawable.ic_sysbar_back);
         mBackLandIcon = res.getDrawable(R.drawable.ic_sysbar_back_land);
         mBackAltIcon = res.getDrawable(R.drawable.ic_sysbar_back_ime);
         mBackAltLandIcon = res.getDrawable(R.drawable.ic_sysbar_back_ime_land);
->>>>>>> ResurrectionRemix/marshmallow
         mRecentIcon = res.getDrawable(R.drawable.ic_sysbar_recent);
         mRecentLandIcon = res.getDrawable(R.drawable.ic_sysbar_recent_land);
         mHomeIcon = res.getDrawable(R.drawable.ic_sysbar_home);
@@ -736,9 +731,6 @@ public class NavigationBarView extends LinearLayout implements BaseStatusBar.Nav
         mRotatedViews[Surface.ROTATION_270] = mRotatedViews[Surface.ROTATION_90];
         mCurrentView = mRotatedViews[Surface.ROTATION_0];
 
-<<<<<<< HEAD
-        getImeSwitchButton().setOnClickListener(mImeSwitcherClickListener);
-=======
         if (getImeSwitchButton() != null)
             getImeSwitchButton().setOnClickListener(mImeSwitcherClickListener);
         if (mDimNavButtons) {
@@ -746,7 +738,6 @@ public class NavigationBarView extends LinearLayout implements BaseStatusBar.Nav
             if (navButtons != null)
                 navButtons.setOnTouchListener(mNavButtonsTouchListener);  
         }
->>>>>>> ResurrectionRemix/marshmallow
 
         updateRTLOrder();
     }

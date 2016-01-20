@@ -18,19 +18,6 @@
 <PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android"
     android:title="@string/status_bar_tuner">
 
-<<<<<<< HEAD
-    <Preference
-        android:key="statusbar_icon_blacklist"
-        android:title="@string/status_bar" />
-
-    <Preference
-        android:key="demo_mode"
-        android:title="@string/demo_mode" />
-
-    <Preference
-        android:summary="@string/tuner_persistent_warning"
-        android:selectable="false" />
-=======
         <PreferenceCategory
             android:key="hide_statusbar_items"
             android:title="@string/statusbar_tuner_category_title">
@@ -76,7 +63,6 @@
             android:title="@string/status_bar_airplane" />
 
         </PreferenceCategory>
->>>>>>> ResurrectionRemix/marshmallow
 
 </PreferenceScreen>
 

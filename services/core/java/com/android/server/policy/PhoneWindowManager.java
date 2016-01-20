@@ -380,8 +380,6 @@ public class PhoneWindowManager implements WindowManagerPolicy {
 
     WindowState mKeyguardPanel;
 
-    WindowState mKeyguardPanel;
-
     KeyguardServiceDelegate mKeyguardDelegate;
     final Runnable mWindowManagerDrawCallback = new Runnable() {
         @Override

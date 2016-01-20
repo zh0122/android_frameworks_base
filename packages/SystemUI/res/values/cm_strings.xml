@@ -1,24 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!--
-<<<<<<< HEAD
-=======
-
-/**
- * Copyright (c) 2009, The Android Open Source Project
- *
- * Licensed under the Apache License, Version 2.0 (the "License"); 
- * you may not use this file except in compliance with the License. 
- * You may obtain a copy of the License at 
- *
- *     http://www.apache.org/licenses/LICENSE-2.0 
- *
- * Unless required by applicable law or agreed to in writing, software 
- * distributed under the License is distributed on an "AS IS" BASIS, 
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. 
- * See the License for the specific language governing permissions and 
- * limitations under the License.
- */
->>>>>>> ResurrectionRemix/marshmallow
      Copyright (C) 2012-2015 The CyanogenMod Project
 
      Licensed under the Apache License, Version 2.0 (the "License");
@@ -32,10 +13,6 @@
      WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
      See the License for the specific language governing permissions and
      limitations under the License.
-<<<<<<< HEAD
-=======
-
->>>>>>> ResurrectionRemix/marshmallow
 -->
 <resources xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">
 
@@ -125,7 +102,7 @@
     <!-- The text for the button in the notification window-shade that clears
          all of the currently visible notifications. [CHAR LIMIT=10]-->
     <string name="clear_recents">Close all recent</string>
-     
+
     <!-- Weather string format in expanded statusbar header -->
     <string name="weather_info_not_available">Not connected</string>
 
@@ -139,10 +116,7 @@
     <string name="quick_settings_nfc_label">NFC</string>
     <string name="quick_settings_profiles">System profiles</string>
     <string name="quick_settings_profiles_off">Profiles disabled</string>
-<<<<<<< HEAD
     <string name="quick_settings_heads_up_label">Heads up</string>
-=======
->>>>>>> ResurrectionRemix/marshmallow
     <string name="quick_settings_battery_saver_label">Battery saver</string>
 
     <!-- Content description of the sync tile in quick settings when off (not shown on the screen). [CHAR LIMIT=NONE] -->
@@ -214,7 +188,6 @@
     <!-- Announcement made when ambient display changes to on (not shown on the screen). [CHAR LIMIT=NONE] -->
     <string name="accessibility_quick_settings_ambient_display_changed_on">Ambient display turned on.</string>
 
-<<<<<<< HEAD
     <!-- Content description of the heads up tile in quick settings when off (not shown on the screen). [CHAR LIMIT=NONE] -->
     <string name="accessibility_quick_settings_heads_up_off">Heads up off.</string>
     <!-- Content description of the heads up tile in quick settings when on (not shown on the screen). [CHAR LIMIT=NONE] -->
@@ -224,8 +197,6 @@
     <string name="accessibility_quick_settings_heads_up_changed_off">Heads up turned off.</string>
     <!-- Announcement made when heads up changes to on (not shown on the screen). [CHAR LIMIT=NONE] -->
     <string name="accessibility_quick_settings_heads_up_changed_on">Heads up turned on.</string>
-=======
->>>>>>> ResurrectionRemix/marshmallow
 
     <!-- Content description of the battery saver tile in quick settings when off (not shown on the screen). [CHAR LIMIT=NONE] -->
     <string name="accessibility_quick_settings_battery_saver_off">Battery saver off.</string>
@@ -236,10 +207,7 @@
     <string name="accessibility_quick_settings_battery_saver_changed_off">Battery saver turned off.</string>
     <!-- Announcement made when battery saver changes to on (not shown on the screen). [CHAR LIMIT=NONE] -->
     <string name="accessibility_quick_settings_battery_saver_changed_on">Battery saver turned on.</string>
-<<<<<<< HEAD
 
-=======
->>>>>>> ResurrectionRemix/marshmallow
     <!-- Dynamic tiles -->
     <string name="quick_settings_dynamic_tile_detail_title">Dynamic tile</string>
     <string name="dynamic_qs_tile_next_alarm_label">Next alarm</string>

@@ -21,10 +21,7 @@ package com.android.internal.logging;
  * @hide
  */
 public interface MetricsConstants {
-<<<<<<< HEAD
-=======
      public static final int DONT_TRACK_ME_BRO = -Integer.MAX_VALUE + 1;	
->>>>>>> ResurrectionRemix/marshmallow
     // These constants must match those in the analytic pipeline, do not edit.
     // Add temporary values to the top of MetricsLogger instead.
     public static final int VIEW_UNKNOWN = 0;

@@ -43,11 +43,8 @@ import android.graphics.Rect;
 import android.net.Uri;
 import android.os.Handler;
 import android.os.PowerManager;
-<<<<<<< HEAD
-=======
 import android.os.UserHandle;
 import android.provider.Settings;
->>>>>>> ResurrectionRemix/marshmallow
 import android.util.AttributeSet;
 import android.util.MathUtils;
 import android.view.GestureDetector;
@@ -240,11 +237,8 @@ public class NotificationPanelView extends PanelView implements
     private boolean mLaunchingAffordance;
     private String mLastCameraLaunchSource = KeyguardBottomAreaView.CAMERA_LAUNCH_SOURCE_AFFORDANCE;
 
-<<<<<<< HEAD
-=======
     private boolean mStatusBarLockedOnSecureKeyguard;
 
->>>>>>> ResurrectionRemix/marshmallow
     private ComponentName mThirdPartyKeyguardViewComponent;
     private KeyguardExternalView mKeyguardExternalView;
     private CmLockPatternUtils mLockPatternUtils;
@@ -342,10 +336,7 @@ public class NotificationPanelView extends PanelView implements
                 }
             }
         });
-<<<<<<< HEAD
-=======
         setQSBackgroundAlpha();
->>>>>>> ResurrectionRemix/marshmallow
 
         mLockPatternUtils = new CmLockPatternUtils(getContext());
         if (mLockPatternUtils.isThirdPartyKeyguardEnabled()) {

@@ -61,13 +61,9 @@ import android.widget.RelativeLayout;
 import android.widget.Switch;
 import android.widget.TextView;
 import android.widget.Toast;
-<<<<<<< HEAD
-
-=======
 import com.android.internal.util.cm.WeatherController;
 import com.android.internal.util.cm.WeatherControllerImpl;
 import com.android.internal.logging.MetricsConstants;
->>>>>>> ResurrectionRemix/marshmallow
 import com.android.keyguard.KeyguardStatusView;
 import com.android.systemui.BatteryLevelTextView;
 import com.android.systemui.BatteryMeterView;
@@ -182,18 +178,11 @@ public class StatusBarHeaderView extends RelativeLayout implements View.OnClickL
     private QSTile.DetailAdapter mEditingDetailAdapter;
     private boolean mEditing;
 
-<<<<<<< HEAD
-    private UserInfoController mUserInfoController;
-
-=======
-
     private ImageView mBackgroundImage;
     private Drawable mCurrentBackground;
     private float mLastHeight;
     private UserInfoController mUserInfoController;
 
-
->>>>>>> ResurrectionRemix/marshmallow
     public StatusBarHeaderView(Context context, AttributeSet attrs) {
         super(context, attrs);
     }
@@ -313,16 +302,12 @@ public class StatusBarHeaderView extends RelativeLayout implements View.OnClickL
         updateClockCollapsedMargin();
     }
 
-<<<<<<< HEAD
-=======
-
     public void vibrateheader(int duration) {
         if (mVibrator != null) {
             if (mVibrator.hasVibrator()) { mVibrator.vibrate(duration); }
         	}
 	}
 
->>>>>>> ResurrectionRemix/marshmallow
     @Override
     protected void onDetachedFromWindow() {
         super.onDetachedFromWindow();

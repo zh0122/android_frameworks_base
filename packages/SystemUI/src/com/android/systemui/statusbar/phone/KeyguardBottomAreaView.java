@@ -996,13 +996,4 @@ public class KeyguardBottomAreaView extends FrameLayout implements View.OnClickL
         mShortcutHelper.cleanup();
         mUnlockMethodCache.removeListener(this);
     }
-
-    @Override
-    protected void onDetachedFromWindow() {
-        super.onDetachedFromWindow();
-        mAccessibilityController.removeStateChangedCallback(this);
-        mContext.unregisterReceiver(mDevicePolicyReceiver);
-        mShortcutHelper.cleanup();
-        mUnlockMethodCache.removeListener(this);
-    }
 }

@@ -31,10 +31,7 @@ import android.graphics.drawable.Drawable;
 import android.graphics.PorterDuff.Mode;
 import android.graphics.Typeface;
 import android.os.UserHandle;
-<<<<<<< HEAD
-=======
 import android.provider.AlarmClock;
->>>>>>> ResurrectionRemix/marshmallow
 import android.provider.Settings;
 import android.text.TextUtils;
 import android.text.format.DateFormat;

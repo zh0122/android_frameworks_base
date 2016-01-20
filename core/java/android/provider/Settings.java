@@ -4956,13 +4956,6 @@ public final class Settings {
         public static final String SAFE_HEADSET_VOLUME = "safe_headset_volume";
 
         /**
-         * Volume key controls ringtone or media sound stream
-         * @hide
-         */
-        public static final String VOLUME_KEYS_CONTROL_RING_STREAM =
-                "volume_keys_control_ring_stream";
-
-        /**
          * Settings to backup. This is here so that it's in the same place as the settings
          * keys and easy to update.
          *
@@ -7554,15 +7547,12 @@ public final class Settings {
          * @hide
          */
         public static final String VOLUME_LINK_NOTIFICATION = "volume_link_notification";
-<<<<<<< HEAD
-=======
 
          /**
          * Whether user is allowed to pull down quick settings on secure keyguard.
          * @hide
          */
         public static final String STATUS_BAR_LOCKED_ON_SECURE_KEYGUARD = "status_bar_locked_on_secure_keyguard";
->>>>>>> ResurrectionRemix/marshmallow
 
         /**
          * This are the settings to be backed up.

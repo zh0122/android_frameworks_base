@@ -22,11 +22,8 @@ import android.content.res.Resources;
 import android.graphics.Point;
 import android.graphics.PixelFormat;
 import android.os.SystemProperties;
-<<<<<<< HEAD
-=======
 import android.os.UserHandle;
 import android.provider.Settings;
->>>>>>> ResurrectionRemix/marshmallow
 import android.util.Log;
 import android.view.Gravity;
 import android.view.Display;

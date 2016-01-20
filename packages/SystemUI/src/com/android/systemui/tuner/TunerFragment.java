@@ -41,22 +41,10 @@ import com.android.systemui.tuner.TunerService.Tunable;
 
 public class TunerFragment extends PreferenceFragment {
 
-<<<<<<< HEAD
-    private static final String TAG = "TunerFragment";
-
-    private static final String KEY_STATUSBAR_BLACKLIST = "statusbar_icon_blacklist";
-    private static final String KEY_DEMO_MODE = "demo_mode";
-
-    public static final String SETTING_SEEN_TUNER_WARNING = "seen_tuner_warning";
-
-    private static final int MENU_REMOVE = Menu.FIRST + 1;
-
-=======
     public static final String TAG = "TunerFragment";
 
     private final SettingObserver mSettingObserver = new SettingObserver();
 
->>>>>>> ResurrectionRemix/marshmallow
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
@@ -64,53 +52,11 @@ public class TunerFragment extends PreferenceFragment {
 
         getActivity().getActionBar().setDisplayHomeAsUpEnabled(true);
         setHasOptionsMenu(true);
-<<<<<<< HEAD
-
-        findPreference(KEY_STATUSBAR_BLACKLIST).setOnPreferenceClickListener(new OnPreferenceClickListener() {
-            @Override
-            public boolean onPreferenceClick(Preference preference) {
-                FragmentTransaction ft = getFragmentManager().beginTransaction();
-                ft.replace(android.R.id.content, new StatusBarIconBlacklistFragment(),
-                        "StatusBarBlacklist");
-                ft.addToBackStack(null);
-                ft.commit();
-                return true;
-            }
-        });
-        findPreference(KEY_DEMO_MODE).setOnPreferenceClickListener(new OnPreferenceClickListener() {
-            @Override
-            public boolean onPreferenceClick(Preference preference) {
-                FragmentTransaction ft = getFragmentManager().beginTransaction();
-                ft.replace(android.R.id.content, new DemoModeFragment(), "DemoMode");
-                ft.addToBackStack(null);
-                ft.commit();
-                return true;
-            }
-        });
-        if (Settings.Secure.getInt(getContext().getContentResolver(), SETTING_SEEN_TUNER_WARNING,
-                0) == 0) {
-            new AlertDialog.Builder(getContext())
-                    .setTitle(R.string.tuner_warning_title)
-                    .setMessage(R.string.tuner_warning)
-                    .setPositiveButton(R.string.got_it, new OnClickListener() {
-                        @Override
-                        public void onClick(DialogInterface dialog, int which) {
-                            Settings.Secure.putInt(getContext().getContentResolver(),
-                                    SETTING_SEEN_TUNER_WARNING, 1);
-                        }
-                    }).show();
-        }
-=======
->>>>>>> ResurrectionRemix/marshmallow
     }
 
     @Override
     public void onResume() {
         super.onResume();
-<<<<<<< HEAD
-
-=======
->>>>>>> ResurrectionRemix/marshmallow
         registerPrefs(getPreferenceScreen());
         MetricsLogger.visibility(getContext(), MetricsLogger.TUNER, true);
     }
@@ -118,6 +64,7 @@ public class TunerFragment extends PreferenceFragment {
     @Override
     public void onPause() {
         super.onPause();
+        getContext().getContentResolver().unregisterContentObserver(mSettingObserver);
 
         unregisterPrefs(getPreferenceScreen());
         MetricsLogger.visibility(getContext(), MetricsLogger.TUNER, false);
@@ -158,8 +105,6 @@ public class TunerFragment extends PreferenceFragment {
         }
         return super.onOptionsItemSelected(item);
     }
-<<<<<<< HEAD
-=======
 
     private final class SettingObserver extends ContentObserver {
         public SettingObserver() {
@@ -171,5 +116,4 @@ public class TunerFragment extends PreferenceFragment {
             super.onChange(selfChange, uri, userId);
         }
     }
->>>>>>> ResurrectionRemix/marshmallow
 }

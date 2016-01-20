@@ -72,12 +72,7 @@
         android:layout_toStartOf="@id/system_icons_super_container"
         android:gravity="center_vertical"
         android:ellipsize="marquee"
-<<<<<<< HEAD
-        android:textAppearance="?android:attr/textAppearanceSmall"
-        android:textColor="@color/keyguard_carrier_text_color"
-=======
         android:textAppearance="@style/TextAppearance.StatusBar.CarrierLabel"
->>>>>>> ResurrectionRemix/marshmallow
         android:singleLine="true" />
 
 </com.android.systemui.statusbar.phone.KeyguardStatusBarView>

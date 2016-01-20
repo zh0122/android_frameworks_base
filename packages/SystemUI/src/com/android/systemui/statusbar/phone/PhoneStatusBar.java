@@ -470,15 +470,10 @@ public class PhoneStatusBar extends BaseStatusBar implements DemoMode,
     int mInitialTouchX;
     int mInitialTouchY;
 
-<<<<<<< HEAD
-=======
-
-
     // last theme that was applied in order to detect theme change (as opposed
     // to some other configuration change).
     ThemeConfig mCurrentTheme;
 
->>>>>>> ResurrectionRemix/marshmallow
     private boolean mRecreating = false;
     private int mBatterySaverWarningColor;
 
@@ -1331,8 +1326,6 @@ public class PhoneStatusBar extends BaseStatusBar implements DemoMode,
             // no window manager? good luck with that
         }
 
-<<<<<<< HEAD
-=======
         addGestureAnywhereView();
         addSidebarView();
         addAppCircleSidebar();
@@ -1355,7 +1348,6 @@ public class PhoneStatusBar extends BaseStatusBar implements DemoMode,
 
             });
 
->>>>>>> ResurrectionRemix/marshmallow
         if (mAssistManager == null) {
             mAssistManager = new AssistManager(this, context);
         }
@@ -1557,9 +1549,6 @@ public class PhoneStatusBar extends BaseStatusBar implements DemoMode,
         }
         if (mWeatherController == null) {
             mWeatherController = new WeatherControllerImpl(mContext);
-<<<<<<< HEAD
-        }
-=======
         }
 
         mWeatherTempStyle = Settings.System.getIntForUser(
@@ -1591,7 +1580,6 @@ public class PhoneStatusBar extends BaseStatusBar implements DemoMode,
         }
         updateWeatherTextState(mWeatherController.getWeatherInfo().temp, mWeatherTempColor,
                 mWeatherTempSize, mWeatherTempFontStyle);
->>>>>>> ResurrectionRemix/marshmallow
 
         mKeyguardUserSwitcher = new KeyguardUserSwitcher(mContext,
                 (ViewStub) mStatusBarWindowContent.findViewById(R.id.keyguard_user_switcher),
@@ -1611,11 +1599,7 @@ public class PhoneStatusBar extends BaseStatusBar implements DemoMode,
             }
             mQSPanel.setHost(mQSTileHost);
             if (mBrightnessMirrorController == null) {
-<<<<<<< HEAD
-                mBrightnessMirrorController = new BrightnessMirrorController(mStatusBarWindowContent);
-=======
                 mBrightnessMirrorController = new BrightnessMirrorController(mContext, mStatusBarWindowContent);
->>>>>>> ResurrectionRemix/marshmallow
             }
             mQSPanel.setBrightnessMirror(mBrightnessMirrorController);
             mHeader.setQSPanel(mQSPanel);
@@ -5810,9 +5794,6 @@ public class PhoneStatusBar extends BaseStatusBar implements DemoMode,
         updateDozingState();
     }
 
-<<<<<<< HEAD
-=======
-
     public void setBackgroundBitmap(Bitmap bmp) {
         if (bmp != null) {
             if (mBlurRadius != 0) {
@@ -5851,7 +5832,6 @@ public class PhoneStatusBar extends BaseStatusBar implements DemoMode,
         return out;
 }
 
->>>>>>> ResurrectionRemix/marshmallow
     public VisualizerView getVisualizer() {
         return mVisualizerView;
     }

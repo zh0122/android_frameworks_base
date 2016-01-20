@@ -19,10 +19,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.net.NetworkCapabilities;
 import android.os.Looper;
-<<<<<<< HEAD
-=======
 import android.provider.Settings;
->>>>>>> ResurrectionRemix/marshmallow
 import android.os.SystemProperties;
 import android.telephony.PhoneStateListener;
 import android.telephony.ServiceState;

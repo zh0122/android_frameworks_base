@@ -159,6 +159,7 @@ import com.android.systemui.keyguard.KeyguardViewMediator;
 import com.android.systemui.omni.StatusBarHeaderMachine;
 import com.android.systemui.qs.QSDragPanel;
 import com.android.systemui.qs.QSPanel;
+import com.android.systemui.qs.QSTile;
 import com.android.systemui.recents.ScreenPinningRequest;
 import com.android.systemui.settings.BrightnessController;
 import com.android.systemui.statusbar.ActivatableNotificationView;
@@ -1602,6 +1603,7 @@ public class PhoneStatusBar extends BaseStatusBar implements DemoMode,
                 mBrightnessMirrorController = new BrightnessMirrorController(mContext, mStatusBarWindowContent);
             }
             mQSPanel.setBrightnessMirror(mBrightnessMirrorController);
+            mQSPanel.setTiles(mQSTileHost.getTiles());
             mHeader.setQSPanel(mQSPanel);
             mQSTileHost.setCallback(new QSTileHost.Callback() {
                 @Override
@@ -1616,6 +1618,9 @@ public class PhoneStatusBar extends BaseStatusBar implements DemoMode,
 
                 @Override
                 public void setEditing(final boolean editing) {
+                    if (mState != StatusBarState.SHADE) {
+                        return;
+                    }
                     mHandler.post(new Runnable() {
                         @Override
                         public void run() {
@@ -1632,6 +1637,9 @@ public class PhoneStatusBar extends BaseStatusBar implements DemoMode,
 
                 @Override
                 public void goToSettingsPage() {
+                    if (mState != StatusBarState.SHADE) {
+                        return;
+                    }
                     setEditing(true);
                     mHandler.postDelayed(new Runnable() {
                         @Override
@@ -1639,6 +1647,40 @@ public class PhoneStatusBar extends BaseStatusBar implements DemoMode,
                             mQSPanel.goToSettingsPage();
                         }
                     }, 500);
+                }
+
+                @Override
+                public void resetTiles() {
+                    mHandler.post(new Runnable() {
+                        @Override
+                        public void run() {
+                            mQSPanel.setEditing(false);
+                            mHeader.setEditing(false);
+
+                            // unregister custom tile service while we reset to not get
+                            // callbacks from custom tiles
+                            try {
+                                mCustomTileListenerService.unregisterAsSystemService();
+                            } catch (RemoteException e) {
+                                Log.e(TAG, "Unable to unregister custom tile listener", e);
+                            }
+
+                            // clear out old tile states and views
+                            mQSPanel.setTiles(new ArrayList<QSTile<?>>());
+
+                            mQSTileHost.resetTiles();
+
+                            // reregister service
+                            try {
+                                mCustomTileListenerService.registerAsSystemService(mContext,
+                                        new ComponentName(mContext.getPackageName(),
+                                                PhoneStatusBar.this.getClass().getCanonicalName()),
+                                        UserHandle.USER_ALL);
+                            } catch (RemoteException e) {
+                                Log.e(TAG, "Unable to register custom tile listener", e);
+                            }
+                        }
+                    });
                 }
             });
         }
@@ -4267,6 +4309,18 @@ public class PhoneStatusBar extends BaseStatusBar implements DemoMode,
             }
         }
 
+        if (mCustomTileListenerService != null) {
+            try {
+                mCustomTileListenerService.unregisterAsSystemService();
+            } catch (RemoteException e) {
+                Log.e(TAG, "Unable to unregister custom tile listener", e);
+            }
+        }
+
+        mQSPanel.getHost().setCustomTileListenerService(null);
+        mQSPanel.setTiles(new ArrayList<QSTile<?>>());
+        mQSPanel.setListening(false);
+
         makeStatusBarView();
         repositionNavigationBar();
 
@@ -4292,16 +4346,6 @@ public class PhoneStatusBar extends BaseStatusBar implements DemoMode,
 
         // Stop the command queue until the new status bar container settles and has a layout pass
         mCommandQueue.pause();
-
-        if (mCustomTileListenerService != null) {
-            try {
-                mCustomTileListenerService.unregisterAsSystemService();
-            } catch (RemoteException e) {
-                Log.e(TAG, "Unable to unregister custom tile listener", e);
-            }
-        }
-
-        mQSPanel.getHost().setCustomTileListenerService(null);
 
         // fix notification panel being shifted to the left by calling
         // instantCollapseNotificationPanel()

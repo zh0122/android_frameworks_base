@@ -5230,20 +5230,19 @@ public class AudioService extends IAudioService.Stub {
         }
     }
 
-    private void startMusicPlayer()
-    {
-        boolean launchPlayer = Settings.System.getIntForUser(mContext.getContentResolver(),
-                Settings.System.HEADSET_CONNECT_PLAYER, 0, UserHandle.USER_CURRENT) != 0;
-
+    private void startMusicPlayer() {
+        boolean launchPlayer = CMSettings.System.getIntForUser(mContext.getContentResolver(),
+                CMSettings.System.HEADSET_CONNECT_PLAYER, 0, UserHandle.USER_CURRENT) != 0;
         TelecomManager tm = (TelecomManager) mContext.getSystemService(Context.TELECOM_SERVICE);
+
         if (launchPlayer && !tm.isInCall()) {
-            Intent playerIntent = new Intent(Intent.ACTION_MAIN);
-            playerIntent.addCategory(Intent.CATEGORY_APP_MUSIC);
-            playerIntent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
             try {
+                Intent playerIntent = new Intent(Intent.ACTION_MAIN);
+                playerIntent.addCategory(Intent.CATEGORY_APP_MUSIC);
+                playerIntent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
                 mContext.startActivity(playerIntent);
-            } catch(ActivityNotFoundException e) {
-                Log.e(TAG, "error launching music player", e);
+            } catch (ActivityNotFoundException | IllegalArgumentException e) {
+                Log.w(TAG, "No music player Activity could be found");
             }
         }
     }

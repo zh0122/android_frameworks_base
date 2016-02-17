@@ -200,7 +200,7 @@
 
  	<!-- started from PhoneWindowManager
              TODO: Should have an android:permission attribute -->
-        <service android:name=".nameless.onthego.OnTheGoService"
+        <service android:name=".rr.onthego.OnTheGoService"
             android:process=":onthego"
             android:exported="false" />
 
@@ -481,21 +481,6 @@
             </intent-filter>
         </activity>
 
-        <activity android:name=".statusbar.sidebar.SidebarConfigurationActivity"
-             android:label="@string/title_activity_sidebar_configuration"
-             android:taskAffinity=""
-             android:excludeFromRecents="true"
-             android:exported="true">
-             <intent-filter>
-                <action android:name="android.intent.action.MAIN" />
-             </intent-filter>
-        </activity>
-
-        <provider
-            android:name=".statusbar.sidebar.SidebarContentProvider"
-            android:authorities="org.chameleonos.sidebar.contentprovider" >
-        </provider>
-
         <activity
             android:name=".settings.BrightnessDialog"
             android:label="@string/quick_settings_brightness_dialog_title"
@@ -520,6 +505,19 @@
             android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.SHOW_NOTIFICATION_BRIGHTNESS_DIALOG" />
+                <category android:name="android.intent.category.DEFAULT" />
+            </intent-filter>
+        </activity>
+
+        <!-- App picker activity -->
+        <activity
+            android:name=".rr.apppicker.AppPickerActivity"
+            android:theme="@android:style/Theme.DeviceDefault.NoActionBar"
+            android:label="@string/accessibility_app_picker"
+            android:enabled="true"
+            android:excludeFromRecents="true" >
+            <intent-filter>
+                <action android:name=".rr.apppicker.AppPickerActivity" />
                 <category android:name="android.intent.category.DEFAULT" />
             </intent-filter>
         </activity>

@@ -2180,22 +2180,21 @@ package android {
     field public static final int Theme_Light_Panel = 16973914; // 0x103005a
     field public static final int Theme_Light_WallpaperSettings = 16973922; // 0x1030062
     field public static final int Theme_Material = 16974372; // 0x1030224
-    field public static final int Theme_Material_DayNight = 16974548; // 0x10302d4
-    field public static final int Theme_Material_DayNight_DarkActionBar = 16974549; // 0x10302d5
-    field public static final int Theme_Material_DayNight_Dialog = 16974550; // 0x10302d6
-    field public static final int Theme_Material_DayNight_DialogWhenLarge = 16974556; // 0x10302dc
-    field public static final int Theme_Material_DayNight_DialogWhenLarge_DarkActionBar = 16974568; // 0x10302e8
-    field public static final int Theme_Material_DayNight_DialogWhenLarge_NoActionBar = 16974557; // 0x10302dd
-    field public static final int Theme_Material_DayNight_Dialog_Alert = 16974551; // 0x10302d7
-    field public static final int Theme_Material_DayNight_Dialog_MinWidth = 16974552; // 0x10302d8
-    field public static final int Theme_Material_DayNight_Dialog_NoActionBar = 16974553; // 0x10302d9
-    field public static final int Theme_Material_DayNight_Dialog_NoActionBar_MinWidth = 16974554; // 0x10302da
-    field public static final int Theme_Material_DayNight_Dialog_Presentation = 16974555; // 0x10302db
-    field public static final int Theme_Material_DayNight_NoActionBar = 16974558; // 0x10302de
-    field public static final int Theme_Material_DayNight_NoActionBar_Fullscreen = 16974559; // 0x10302df
-    field public static final int Theme_Material_DayNight_NoActionBar_Overscan = 16974560; // 0x10302e0
-    field public static final int Theme_Material_DayNight_NoActionBar_TranslucentDecor = 16974561; // 0x10302e1
-    field public static final int Theme_Material_DayNight_Panel = 16974562; // 0x10302e2
+    field public static final int Theme_Material_DayNight = 16974552; // 0x10302d8
+    field public static final int Theme_Material_DayNight_DarkActionBar = 16974553; // 0x10302d9
+    field public static final int Theme_Material_DayNight_Dialog = 16974554; // 0x10302da
+    field public static final int Theme_Material_DayNight_DialogWhenLarge = 16974560; // 0x10302e0
+    field public static final int Theme_Material_DayNight_DialogWhenLarge_NoActionBar = 16974561; // 0x10302e1
+    field public static final int Theme_Material_DayNight_Dialog_Alert = 16974555; // 0x10302db
+    field public static final int Theme_Material_DayNight_Dialog_MinWidth = 16974556; // 0x10302dc
+    field public static final int Theme_Material_DayNight_Dialog_NoActionBar = 16974557; // 0x10302dd
+    field public static final int Theme_Material_DayNight_Dialog_NoActionBar_MinWidth = 16974558; // 0x10302de
+    field public static final int Theme_Material_DayNight_Dialog_Presentation = 16974559; // 0x10302df
+    field public static final int Theme_Material_DayNight_NoActionBar = 16974562; // 0x10302e2
+    field public static final int Theme_Material_DayNight_NoActionBar_Fullscreen = 16974563; // 0x10302e3
+    field public static final int Theme_Material_DayNight_NoActionBar_Overscan = 16974564; // 0x10302e4
+    field public static final int Theme_Material_DayNight_NoActionBar_TranslucentDecor = 16974565; // 0x10302e5
+    field public static final int Theme_Material_DayNight_Panel = 16974566; // 0x10302e6
     field public static final int Theme_Material_Dialog = 16974373; // 0x1030225
     field public static final int Theme_Material_DialogWhenLarge = 16974379; // 0x103022b
     field public static final int Theme_Material_DialogWhenLarge_NoActionBar = 16974380; // 0x103022c
@@ -2209,7 +2208,6 @@ package android {
     field public static final int Theme_Material_Light_DarkActionBar = 16974392; // 0x1030238
     field public static final int Theme_Material_Light_Dialog = 16974393; // 0x1030239
     field public static final int Theme_Material_Light_DialogWhenLarge = 16974399; // 0x103023f
-    field public static final int Theme_Material_Light_DialogWhenLarge_DarkActionBar = 16974567; // 0x10302e7
     field public static final int Theme_Material_Light_DialogWhenLarge_NoActionBar = 16974400; // 0x1030240
     field public static final int Theme_Material_Light_Dialog_Alert = 16974394; // 0x103023a
     field public static final int Theme_Material_Light_Dialog_MinWidth = 16974395; // 0x103023b
@@ -11222,6 +11220,7 @@ package android.gesture {
     field public static final int GESTURE_STROKE_TYPE_SINGLE = 0; // 0x0
     field public static final int ORIENTATION_HORIZONTAL = 0; // 0x0
     field public static final int ORIENTATION_VERTICAL = 1; // 0x1
+    field protected boolean mClearPerformedGesture;
   }
 
   public static abstract interface GestureOverlayView.OnGestureListener {
@@ -16137,6 +16136,7 @@ package android.media {
     method public void setRingerMode(int);
     method public deprecated void setRouting(int, int, int);
     method public void setSpeakerphoneOn(boolean);
+    method public void setStreamMaxVolume(int, int);
     method public deprecated void setStreamMute(int, boolean);
     method public deprecated void setStreamSolo(int, boolean);
     method public void setStreamVolume(int, int, int);
@@ -25372,6 +25372,7 @@ package android.os {
   }
 
   public final class PowerManager {
+    method public java.lang.String getSeenWakeLocks();
     method public boolean isDeviceIdleMode();
     method public boolean isIgnoringBatteryOptimizations(java.lang.String);
     method public boolean isInteractive();
@@ -26052,6 +26053,23 @@ package android.preference {
     method public void setRingtoneType(int);
     method public void setShowDefault(boolean);
     method public void setShowSilent(boolean);
+  }
+
+  public class SlimSeekBarPreference extends android.preference.Preference implements android.widget.SeekBar.OnSeekBarChangeListener {
+    ctor public SlimSeekBarPreference(android.content.Context, android.util.AttributeSet);
+    method public void disablePercentageValue(boolean);
+    method public void disableText(boolean);
+    method public void isMilliseconds(boolean);
+    method public void minimumValue(int);
+    method public void multiplyValue(int);
+    method public void onProgressChanged(android.widget.SeekBar, int, boolean);
+    method public void onStartTrackingTouch(android.widget.SeekBar);
+    method public void onStopTrackingTouch(android.widget.SeekBar);
+    method public void setDefault(int);
+    method public void setInitValue(int);
+    method public void setInterval(int);
+    field public int interval;
+    field public static int maximum;
   }
 
   public class SwitchPreference extends android.preference.TwoStatePreference {
@@ -28717,6 +28735,7 @@ package android.provider {
     method public static deprecated boolean getShowGTalkServiceStatus(android.content.ContentResolver);
     method public static java.lang.String getString(android.content.ContentResolver, java.lang.String);
     method public static android.net.Uri getUriFor(java.lang.String);
+    method public static boolean putBoolean(android.content.ContentResolver, java.lang.String, boolean);
     method public static boolean putConfiguration(android.content.ContentResolver, android.content.res.Configuration);
     method public static boolean putFloat(android.content.ContentResolver, java.lang.String, float);
     method public static boolean putInt(android.content.ContentResolver, java.lang.String, int);
@@ -28730,6 +28749,7 @@ package android.provider {
     field public static final java.lang.String ALARM_ALERT = "alarm_alert";
     field public static final deprecated java.lang.String ALWAYS_FINISH_ACTIVITIES = "always_finish_activities";
     field public static final deprecated java.lang.String ANDROID_ID = "android_id";
+    field public static final java.lang.String ANIMATION_CONTROLS_DURATION = "animation_controls_duration";
     field public static final deprecated java.lang.String ANIMATOR_DURATION_SCALE = "animator_duration_scale";
     field public static final deprecated java.lang.String AUTO_TIME = "auto_time";
     field public static final deprecated java.lang.String AUTO_TIME_ZONE = "auto_time_zone";
@@ -28737,6 +28757,7 @@ package android.provider {
     field public static final java.lang.String BLUETOOTH_DISCOVERABILITY_TIMEOUT = "bluetooth_discoverability_timeout";
     field public static final deprecated java.lang.String BLUETOOTH_ON = "bluetooth_on";
     field public static final android.net.Uri CONTENT_URI;
+    field public static final java.lang.String CUSTOM_CARRIER_LABEL = "custom_carrier_label";
     field public static final deprecated java.lang.String DATA_ROAMING = "data_roaming";
     field public static final java.lang.String DATE_FORMAT = "date_format";
     field public static final deprecated java.lang.String DEBUG_APP = "debug_app";
@@ -28750,12 +28771,15 @@ package android.provider {
     field public static final java.lang.String END_BUTTON_BEHAVIOR = "end_button_behavior";
     field public static final java.lang.String FONT_SCALE = "font_scale";
     field public static final java.lang.String HAPTIC_FEEDBACK_ENABLED = "haptic_feedback_enabled";
+    field public static final java.lang.String HIDE_PANEL_BATTERY = "hide_panel_battery";
     field public static final deprecated java.lang.String HTTP_PROXY = "http_proxy";
+    field public static final java.lang.String IMMERSIVE_RECENTS = "immersive_recents";
     field public static final deprecated java.lang.String INSTALL_NON_MARKET_APPS = "install_non_market_apps";
     field public static final deprecated java.lang.String LOCATION_PROVIDERS_ALLOWED = "location_providers_allowed";
     field public static final deprecated java.lang.String LOCK_PATTERN_ENABLED = "lock_pattern_autolock";
     field public static final deprecated java.lang.String LOCK_PATTERN_TACTILE_FEEDBACK_ENABLED = "lock_pattern_tactile_feedback_enabled";
     field public static final deprecated java.lang.String LOCK_PATTERN_VISIBLE = "lock_pattern_visible_pattern";
+    field public static final java.lang.String LOCK_SCREEN_SHOW_WEATHER = "lock_screen_show_weather";
     field public static final deprecated java.lang.String LOGGING_ID = "logging_id";
     field public static final deprecated java.lang.String MODE_RINGER = "mode_ringer";
     field public static final java.lang.String MODE_RINGER_STREAMS_AFFECTED = "mode_ringer_streams_affected";
@@ -40587,6 +40611,7 @@ package android.view.inputmethod {
     ctor public EditorInfo();
     method public int describeContents();
     method public void dump(android.util.Printer, java.lang.String);
+    method public final void formalTextInput(boolean);
     method public final void makeCompatible(int);
     method public void writeToParcel(android.os.Parcel, int);
     field public static final android.os.Parcelable.Creator<android.view.inputmethod.EditorInfo> CREATOR;

@@ -19,6 +19,8 @@ package com.android.systemui.statusbar.phone;
 
 import static com.android.systemui.settings.BrightnessController.BRIGHTNESS_ADJ_RESOLUTION;
 
+import android.app.Activity;
+import android.app.ActivityManager.RunningAppProcessInfo;
 import android.animation.Animator;
 import android.animation.AnimatorListenerAdapter;
 import android.animation.TimeInterpolator;
@@ -48,6 +50,7 @@ import android.content.res.Configuration;
 import android.content.res.ThemeChangeRequest.RequestType;
 import android.content.res.ThemeConfig;
 import android.content.res.Resources;
+import android.content.ServiceConnection;
 import android.database.ContentObserver;
 import android.graphics.Bitmap;
 import android.graphics.Canvas;
@@ -70,7 +73,6 @@ import android.media.session.MediaController;
 import android.media.session.MediaSession;
 import android.media.session.MediaSessionManager;
 import android.media.session.PlaybackState;
-import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.Handler;
@@ -86,12 +88,9 @@ import android.os.SystemClock;
 import android.os.UserHandle;
 import android.os.UserManager;
 import android.os.Vibrator;
+import android.os.Message;
+import android.os.Messenger;
 import android.provider.Settings;
-import android.renderscript.Allocation;
-import android.renderscript.Allocation.MipmapControl;
-import android.renderscript.Element;
-import android.renderscript.RenderScript;
-import android.renderscript.ScriptIntrinsicBlur;
 import android.service.notification.NotificationListenerService;
 import android.service.notification.NotificationListenerService.RankingMap;
 import android.service.notification.StatusBarNotification;
@@ -120,6 +119,7 @@ import android.view.ViewStub;
 import android.view.ViewTreeObserver;
 import android.view.WindowManager;
 import android.view.WindowManagerGlobal;
+import android.view.WindowManagerPolicyControl;
 import android.view.accessibility.AccessibilityEvent;
 import android.view.animation.AccelerateDecelerateInterpolator;
 import android.view.animation.AccelerateInterpolator;
@@ -131,6 +131,7 @@ import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.LinearLayout;
+import android.widget.Toast;
 import com.android.internal.logging.MetricsLogger;
 import com.android.internal.statusbar.NotificationVisibility;
 import com.android.internal.statusbar.IStatusBarService;
@@ -140,6 +141,7 @@ import com.android.internal.util.cm.ActionUtils;
 import com.android.internal.util.cm.WeatherController;
 import com.android.internal.util.cm.WeatherControllerImpl;
 import com.android.internal.util.cm.WeatherController.WeatherInfo;
+import com.android.internal.util.cm.Blur;
 import com.android.keyguard.KeyguardHostView.OnDismissAction;
 import com.android.keyguard.KeyguardUpdateMonitor;
 import com.android.keyguard.KeyguardUpdateMonitorCallback;
@@ -160,11 +162,13 @@ import com.android.systemui.omni.StatusBarHeaderMachine;
 import com.android.systemui.qs.QSDragPanel;
 import com.android.systemui.qs.QSPanel;
 import com.android.systemui.qs.QSTile;
+import com.android.systemui.recents.RecentsActivity;
 import com.android.systemui.recents.ScreenPinningRequest;
 import com.android.systemui.settings.BrightnessController;
+import com.android.systemui.screenshot.TakeScreenshotService;
+import com.android.systemui.omni.screenrecord.TakeScreenrecordService;
 import com.android.systemui.statusbar.ActivatableNotificationView;
 import com.android.systemui.statusbar.BackDropView;
-import com.android.systemui.statusbar.AppSidebar;
 import com.android.systemui.statusbar.BaseStatusBar;
 import com.android.systemui.statusbar.CommandQueue;
 import com.android.systemui.statusbar.DismissView;
@@ -317,9 +321,36 @@ public class PhoneStatusBar extends BaseStatusBar implements DemoMode,
     public static final int FONT_MEDIUM_ITALIC = 15;
     public static final int FONT_BLACK = 16;
     public static final int FONT_BLACK_ITALIC = 17;
+    public static final int FONT_DANCINGSCRIPT = 18;
+    public static final int FONT_DANCINGSCRIPT_BOLD = 19;
+    public static final int FONT_COMINGSOON = 20;
+    public static final int FONT_NOTOSERIF = 21;
+    public static final int FONT_NOTOSERIF_ITALIC = 22;
+    public static final int FONT_NOTOSERIF_BOLD = 23;
+    public static final int FONT_NOTOSERIF_BOLD_ITALIC = 24;
+
+
+    private static final Intent RR_SETTINGS = new Intent().setComponent(new ComponentName(
+            "com.android.settings", "com.android.settings.Settings$MainSettingsActivity"));
+    private static final Intent RR_OTA = new Intent().setComponent(new ComponentName(
+            "com.resurrection.ota", "com.resurrection.ota.MainActivity"));
 
     /** Allow some time inbetween the long press for back and recents. */
     private static final int LOCK_TO_APP_GESTURE_TOLERENCE = 200;
+
+    //Expanded Desktop	
+    private static final int STATE_ENABLE_FOR_ALL = 0;
+    private static final int STATE_USER_CONFIGURABLE = 1;
+    private final List<Integer> mExpandedDesktopList = new ArrayList<>(); 
+    private int mExpandedDesktopState;
+    private int mExpandedDesktopStyle;
+    public static final Integer[] EXPANDED_SETTINGS = new Integer[]{
+            WindowManagerPolicyControl.ImmersiveDefaultStyles.IMMERSIVE_FULL,
+            WindowManagerPolicyControl.ImmersiveDefaultStyles.IMMERSIVE_STATUS,
+            WindowManagerPolicyControl.ImmersiveDefaultStyles.IMMERSIVE_NAVIGATION
+    };
+   private ExpandedDesktopObserver mObserver;
+	
 
     /** If true, the system is in the half-boot-to-decryption-screen state.
      * Prudently disable QS and notifications.  */
@@ -391,8 +422,9 @@ public class PhoneStatusBar extends BaseStatusBar implements DemoMode,
 
     // settings
     private QSDragPanel mQSPanel;
+
     private QSTileHost mQSTileHost;
-    private DevForceNavbarObserver mDevForceNavbarObserver;
+
 
     // task manager
     private TaskManager mTaskManager;
@@ -404,6 +436,7 @@ public class PhoneStatusBar extends BaseStatusBar implements DemoMode,
     private boolean mShowTaskList = false;
 
     private boolean mShow4G;
+    private boolean mShow3G;	
 
     // top bar
     StatusBarHeaderView mHeader;
@@ -433,6 +466,7 @@ public class PhoneStatusBar extends BaseStatusBar implements DemoMode,
     private boolean mRRlogo;
     private ImageView rrLogo;
     private int mRRLogoColor;	
+    private int  mRRLogoStyle;	
 
     // Weather temperature
     TextView mWeatherTempView;
@@ -449,6 +483,12 @@ public class PhoneStatusBar extends BaseStatusBar implements DemoMode,
     private int mNavigationBarWindowState = WINDOW_STATE_SHOWING;
 
     private int mStatusBarHeaderHeight;
+
+
+    private ActivityStarter mActivityStarter;
+    private ServiceConnection mScreenshotConnection = null;
+    private boolean mRecording;
+    private ServiceConnection mScreenrecordConnection = null;	
 
     // the tracker view
     int mTrackingPosition; // the position of the top of the tracking view.
@@ -542,9 +582,6 @@ public class PhoneStatusBar extends BaseStatusBar implements DemoMode,
             resolver.registerContentObserver(CMSettings.System.getUriFor(
                     CMSettings.Secure.RECENTS_LONG_PRESS_ACTIVITY), false, this);
             resolver.registerContentObserver(Settings.System.getUriFor(
-                    Settings.System.APP_SIDEBAR_POSITION),
-                    false, this, UserHandle.USER_ALL);
-            resolver.registerContentObserver(Settings.System.getUriFor(
                     Settings.System.STATUS_BAR_RR_LOGO),
                     false, this, UserHandle.USER_ALL);
             resolver.registerContentObserver(Settings.System.getUriFor(
@@ -568,9 +605,6 @@ public class PhoneStatusBar extends BaseStatusBar implements DemoMode,
             resolver.registerContentObserver(Settings.System.getUriFor(
                     Settings.System.STATUS_BAR_WEATHER_FONT_STYLE),
                     false, this, UserHandle.USER_ALL);
-            resolver.registerContentObserver(Settings.System.getUriFor(
-                    Settings.System.STATUS_BAR_CUSTOM_HEADER_DEFAULT), 
-                    false, this, UserHandle.USER_ALL);
 	    resolver.registerContentObserver(Settings.System.getUriFor(
                     Settings.System.LOCKSCREEN_ROTATION),
                     false, this, UserHandle.USER_ALL);
@@ -591,12 +625,25 @@ public class PhoneStatusBar extends BaseStatusBar implements DemoMode,
 	    resolver.registerContentObserver(Settings.System.getUriFor(
                     Settings.System.SHOW_FOURG),
                     false, this, UserHandle.USER_ALL);
+	    resolver.registerContentObserver(Settings.System.getUriFor(
+                    Settings.System.SHOW_THREEG),
+                    false, this, UserHandle.USER_ALL);
             resolver.registerContentObserver(Settings.System.getUriFor(
                     Settings.System.LOCKSCREEN_MAX_NOTIF_CONFIG),
 		    false, this, UserHandle.USER_ALL);
             resolver.registerContentObserver(Settings.System.getUriFor(
                     Settings.System.NOTIFICATION_DRAWER_CLEAR_ALL_ICON_COLOR),
                     false, this, UserHandle.USER_ALL);
+	   resolver.registerContentObserver(Settings.System.getUriFor(
+            	    Settings.System.STATUS_BAR_RR_LOGO),
+                    false, this, UserHandle.USER_ALL);
+           resolver.registerContentObserver(Settings.System.getUriFor(
+                    Settings.System.STATUS_BAR_RR_LOGO_COLOR),
+                    false, this, UserHandle.USER_ALL);
+           resolver.registerContentObserver(Settings.System.getUriFor(
+                    Settings.System.STATUS_BAR_RR_LOGO_STYLE),
+                    false, this, UserHandle.USER_ALL);
+
             update();
         }
 
@@ -626,56 +673,29 @@ public class PhoneStatusBar extends BaseStatusBar implements DemoMode,
                     updateClearAll();
                     updateEmptyShadeView();
             } else if (uri.equals(Settings.System.getUriFor(
-                    Settings.System.STATUS_BAR_CUSTOM_HEADER_DEFAULT))) {
-                    recreateStatusBar();
-                    updateRowStates();
-                    updateSpeedbump();
-                    updateClearAll();
-                    updateEmptyShadeView();
-            } else if (uri.equals(Settings.System.getUriFor(
                     Settings.System.USE_SLIM_RECENTS))) {
                 updateRecents();
             } else if (uri.equals(Settings.System.getUriFor(
                     Settings.System.RECENT_CARD_BG_COLOR))
                     || uri.equals(Settings.System.getUriFor(
                     Settings.System.RECENT_CARD_TEXT_COLOR))) {
-                rebuildRecentsScreen();
-            } else if (uri.equals(Settings.System.getUriFor(
-                    Settings.System.ENABLE_TASK_MANAGER))) {
-                    mShowTaskManager = Settings.System.getIntForUser(
-                            mContext.getContentResolver(),
-                            Settings.System.ENABLE_TASK_MANAGER,
-                            0, UserHandle.USER_CURRENT) == 1;
-                    recreateStatusBar();
-                    updateRowStates();
-                    updateSpeedbump();
-                    updateClearAll();
-                    updateEmptyShadeView();
+                rebuildRecentsScreen();        
             } else if (uri.equals(Settings.System.getUriFor(
                     Settings.System.LOCKSCREEN_ROTATION))
                     || uri.equals(Settings.System.getUriFor(
                     Settings.System.ACCELEROMETER_ROTATION))) {
                 mStatusBarWindowManager.updateKeyguardScreenRotation();
-                            recreateStatusBar();
-                            updateRowStates();
-                            updateSpeedbump();
-                            updateClearAll();
-                            updateEmptyShadeView();
-            } else if (uri.equals(Settings.System.getUriFor(
-                    Settings.System.SHOW_FOURG))) {
-                    mShow4G = Settings.System.getIntForUser(
-                            mContext.getContentResolver(),
-                            Settings.System.SHOW_FOURG,
-                            0, UserHandle.USER_CURRENT) == 1;
-                            recreateStatusBar();
-                            updateRowStates();
-                            updateSpeedbump();
-                            updateClearAll();
-                            updateEmptyShadeView();
-	}   else if (uri.equals(Settings.System.getUriFor(
+            }  else if (uri.equals(Settings.System.getUriFor(
                     Settings.System.NOTIFICATION_DRAWER_CLEAR_ALL_ICON_COLOR))) {
                     UpdateNotifDrawerClearAllIconColor();
-            }
+            } else if (uri.equals(Settings.System.getUriFor(
+                    Settings.System.STATUS_BAR_RR_LOGO_STYLE))) {
+                recreateStatusBar();
+                updateRowStates();
+                updateSpeedbump();
+                updateClearAll();
+                updateEmptyShadeView();
+	}
 
             update();
         }
@@ -699,14 +719,31 @@ public class PhoneStatusBar extends BaseStatusBar implements DemoMode,
             mBrightnessControl = CMSettings.System.getIntForUser(
                     resolver, CMSettings.System.STATUS_BAR_BRIGHTNESS_CONTROL, 0,
                     UserHandle.USER_CURRENT) == 1;
+
+             mRRLogoStyle = Settings.System.getIntForUser(
+                    resolver, Settings.System.STATUS_BAR_RR_LOGO_STYLE, 0,
+                    UserHandle.USER_CURRENT);
             mRRlogo = Settings.System.getIntForUser(resolver,
                     Settings.System.STATUS_BAR_RR_LOGO, 0, mCurrentUserId) == 1;
             mRRLogoColor = Settings.System.getIntForUser(resolver,
                     Settings.System.STATUS_BAR_RR_LOGO_COLOR, 0xFFFFFFFF, mCurrentUserId);
-            showRRLogo(mRRlogo, mRRLogoColor);	
+	       if ( mRRLogoStyle == 0) {
+                rrLogo = (ImageView) mStatusBarView.findViewById(R.id.left_rr_logo);
+            } else if ( mRRLogoStyle == 1) {
+			 rrLogo = (ImageView) mStatusBarView.findViewById(R.id.center_rr_logo);
+	    } else if ( mRRLogoStyle == 2) {
+                rrLogo = (ImageView) mStatusBarView.findViewById(R.id.rr_logo);
+            } else if ( mRRLogoStyle == 3) {
+                rrLogo = (ImageView) mStatusBarView.findViewById(R.id.before_icons_rr_logo);
+            } 
+            showRRLogo(mRRlogo, mRRLogoColor,  mRRLogoStyle);
+
 
             boolean mShow4G = Settings.System.getIntForUser(resolver,
                     Settings.System.SHOW_FOURG, 0, UserHandle.USER_CURRENT) == 1;
+	  
+	    boolean mShow3G = Settings.System.getIntForUser(resolver,
+                    Settings.System.SHOW_THREEG, 0, UserHandle.USER_CURRENT) == 1;
 
             boolean showTaskManager = Settings.System.getIntForUser(resolver,
                     Settings.System.ENABLE_TASK_MANAGER, 0, UserHandle.USER_CURRENT) == 1;
@@ -728,18 +765,6 @@ public class PhoneStatusBar extends BaseStatusBar implements DemoMode,
                         CMSettings.System.NAVBAR_LEFT_IN_LANDSCAPE, 0, UserHandle.USER_CURRENT) == 1;
                 mNavigationBarView.setLeftInLandscape(navLeftInLandscape);
             }
-
-
-            // This method reads CMSettings.Secure.RECENTS_LONG_PRESS_ACTIVITY
-            updateCustomRecentsLongPressHandler(false);
-
-            int sidebarPosition = Settings.System.getInt(
-                    resolver, Settings.System.APP_SIDEBAR_POSITION, AppSidebar.SIDEBAR_POSITION_LEFT);
-            if (sidebarPosition != mSidebarPosition) {
-                mSidebarPosition = sidebarPosition;
-                removeSidebarView();
-                addSidebarView();
-		}
 
             final int oldWeatherState = mWeatherTempState;
             mWeatherTempState = Settings.System.getIntForUser(
@@ -771,56 +796,6 @@ public class PhoneStatusBar extends BaseStatusBar implements DemoMode,
 
         }
     }
-
-    class DevForceNavbarObserver extends UserContentObserver {
-        DevForceNavbarObserver(Handler handler) {
-            super(handler);
-        }
-
-        @Override
-        protected void observe() {
-            super.observe();
-            ContentResolver resolver = mContext.getContentResolver();
-            resolver.registerContentObserver(CMSettings.Secure.getUriFor(
-                    CMSettings.Secure.DEV_FORCE_SHOW_NAVBAR), false, this, UserHandle.USER_ALL);
-        }
-
-        @Override
-        public void update() {
-            boolean visible = CMSettings.Secure.getIntForUser(mContext.getContentResolver(),
-                    CMSettings.Secure.DEV_FORCE_SHOW_NAVBAR, 0, UserHandle.USER_CURRENT) == 1;
-
-            if (visible) {
-                forceAddNavigationBar();
-            } else {
-                removeNavigationBar();
-            }
-
-            // Send a broadcast to Settings to update Key disabling when user changes
-            Intent intent = new Intent("com.cyanogenmod.action.UserChanged");
-            intent.setPackage("com.android.settings");
-            mContext.sendBroadcastAsUser(intent, new UserHandle(UserHandle.USER_CURRENT));
-        }
-    }
-
-    private void forceAddNavigationBar() {
-        // If we have no Navbar view and we should have one, create it
-        if (mNavigationBarView != null) {
-            return;
-        }
-
-        mNavigationBarView =
-                (NavigationBarView) View.inflate(mContext, R.layout.navigation_bar, null);
-
-        mNavigationBarView.setDisabledFlags(mDisabled1);
-        mNavigationBarView.setBar(this);
-        addNavigationBar();
-    }
-
-
-
-
-
 	
     private void updateWeatherTextState(String temp, int color, int size, int font) {
         if (mWeatherTempState == 0 || TextUtils.isEmpty(temp)) {
@@ -891,6 +866,27 @@ public class PhoneStatusBar extends BaseStatusBar implements DemoMode,
                 break;
             case FONT_BLACK_ITALIC:
                 mWeatherTempView.setTypeface(Typeface.create("sans-serif-black", Typeface.ITALIC));
+                break;
+            case FONT_DANCINGSCRIPT:
+                mWeatherTempView.setTypeface(Typeface.create("cursive", Typeface.NORMAL));
+                break;
+            case FONT_DANCINGSCRIPT_BOLD:
+                mWeatherTempView.setTypeface(Typeface.create("cursive", Typeface.BOLD));
+                break;
+            case FONT_COMINGSOON:
+                mWeatherTempView.setTypeface(Typeface.create("casual", Typeface.NORMAL));
+                break;
+            case FONT_NOTOSERIF:
+                mWeatherTempView.setTypeface(Typeface.create("serif", Typeface.NORMAL));
+                break;
+            case FONT_NOTOSERIF_ITALIC:
+                mWeatherTempView.setTypeface(Typeface.create("serif", Typeface.ITALIC));
+                break;
+            case FONT_NOTOSERIF_BOLD:
+                mWeatherTempView.setTypeface(Typeface.create("serif", Typeface.BOLD));
+                break;
+            case FONT_NOTOSERIF_BOLD_ITALIC:
+                mWeatherTempView.setTypeface(Typeface.create("serif", Typeface.BOLD_ITALIC));
                 break;
         }
         mWeatherTempView.setVisibility(View.VISIBLE);
@@ -1175,17 +1171,6 @@ public class PhoneStatusBar extends BaseStatusBar implements DemoMode,
 
         addNavigationBar();
 
-        // Developer options - Force Navigation bar
-        try {
-            boolean needsNav = mWindowManagerService.needsNavigationBar();
-            if (!needsNav) {
-                mDevForceNavbarObserver = new DevForceNavbarObserver(mHandler);
-                mDevForceNavbarObserver.observe();
-            }
-        } catch (RemoteException ex) {
-            // no window manager? good luck with that
-        }
-
         SettingsObserver observer = new SettingsObserver(mHandler);
         observer.observe();
 
@@ -1327,7 +1312,6 @@ public class PhoneStatusBar extends BaseStatusBar implements DemoMode,
         }
 
         addGestureAnywhereView();
-        addSidebarView();
         addAppCircleSidebar();
 
         if (mNavigationBarView == null) {
@@ -1547,9 +1531,6 @@ public class PhoneStatusBar extends BaseStatusBar implements DemoMode,
                         mHandler);
             }
         }
-        if (mWeatherController == null) {
-            mWeatherController = new WeatherControllerImpl(mContext);
-        }
 
         mWeatherTempStyle = Settings.System.getIntForUser(
                 mContext.getContentResolver(), Settings.System.STATUS_BAR_WEATHER_TEMP_STYLE, 0,
@@ -1580,6 +1561,26 @@ public class PhoneStatusBar extends BaseStatusBar implements DemoMode,
         }
         updateWeatherTextState(mWeatherController.getWeatherInfo().temp, mWeatherTempColor,
                 mWeatherTempSize, mWeatherTempFontStyle);
+
+
+	 mRRLogoStyle = Settings.System.getIntForUser(mContext.getContentResolver(),
+                Settings.System.STATUS_BAR_RR_LOGO_STYLE, 0,
+                UserHandle.USER_CURRENT);
+        if ( mRRLogoStyle == 0) {
+                rrLogo = (ImageView) mStatusBarView.findViewById(R.id.left_rr_logo);
+            } else if ( mRRLogoStyle == 1) {
+                rrLogo = (ImageView) mStatusBarView.findViewById(R.id.center_rr_logo);
+            } else if ( mRRLogoStyle == 2) {
+			 rrLogo = (ImageView) mStatusBarView.findViewById(R.id.rr_logo);
+	    }else if ( mRRLogoStyle == 3) {
+                rrLogo = (ImageView) mStatusBarView.findViewById(R.id.before_icons_rr_logo);
+		}
+        mRRlogo = Settings.System.getIntForUser(mContext.getContentResolver(),
+                Settings.System.STATUS_BAR_RR_LOGO, 0, mCurrentUserId) == 1;
+        mRRLogoColor = Settings.System.getIntForUser(mContext.getContentResolver(),
+                Settings.System.STATUS_BAR_RR_LOGO_COLOR, 0xFFFFFFFF, mCurrentUserId);
+       showRRLogo(mRRlogo, mRRLogoColor,  mRRLogoStyle);
+
 
         mKeyguardUserSwitcher = new KeyguardUserSwitcher(mContext,
                 (ViewStub) mStatusBarWindowContent.findViewById(R.id.keyguard_user_switcher),
@@ -1989,6 +1990,90 @@ public class PhoneStatusBar extends BaseStatusBar implements DemoMode,
         }
     };
 
+    private final View.OnClickListener mConfigClickListener = new View.OnClickListener() {
+        public void onClick(View v) {
+            startActivity(RR_SETTINGS, true);
+        }
+    };
+
+    private final View.OnLongClickListener mConfigLongListener =
+            new View.OnLongClickListener() {
+        @Override
+        public boolean onLongClick(View v) {
+            startActivity(RR_OTA, true);
+	     return true;	
+        }
+    };
+
+   private final View.OnClickListener mPieClickListener = new View.OnClickListener() {
+        public void onClick(View v) {
+              Settings.System.putInt(mContext.getContentResolver(),
+                        Settings.System.PA_PIE_STATE, !isPieEnabled() ? 1 : 0);
+        }
+    };
+
+  private final View.OnClickListener mScreenClickListener = new View.OnClickListener() {
+        public void onClick(View v) {
+	takeRecord();
+        }
+    };
+
+private final View.OnClickListener mKillClickListener = new View.OnClickListener() {
+        public void onClick(View v) {
+	killapp();
+        }
+    };
+
+  private boolean isPieEnabled() {
+        return Settings.System.getIntForUser(mContext.getContentResolver(),
+                Settings.System.PA_PIE_STATE, 0,
+                UserHandle.USER_CURRENT) == 1;
+    }
+
+
+    private final View.OnClickListener mTorchClickListener = new View.OnClickListener() {
+        public void onClick(View v) {
+            toggletorch();
+        }
+    };
+
+	//Camera Button
+    private final View.OnClickListener mCameraClickListener = new View.OnClickListener() {
+        public void onClick(View v) {
+              startActivity(KeyguardBottomAreaView.INSECURE_CAMERA_INTENT,
+                    true /* dismissShade */);
+        }
+    };
+    private final View.OnLongClickListener mCameraLongClickListener =
+            new View.OnLongClickListener() {
+        @Override
+        public boolean onLongClick(View v) {
+            startGallery();
+            return true;
+        }
+    };
+
+	//Screenshot
+    private final View.OnClickListener mScreenShotClickListener = new View.OnClickListener() {
+        public void onClick(View v) {
+		takescreen();
+	}
+    };
+
+	//Immersive Mode Button
+    private final View.OnClickListener mImmersiveClickListener = new View.OnClickListener() {
+        public void onClick(View v) {
+		expanddesktop();
+	}
+    };
+
+    //App picker
+    private final View.OnClickListener mAppPickerClickListener = new View.OnClickListener() {
+        public void onClick(View v) {
+            appPicker();
+        }
+    };
+
     private void awakenDreams() {
         if (mDreamManager != null) {
             try {
@@ -2000,23 +2085,306 @@ public class PhoneStatusBar extends BaseStatusBar implements DemoMode,
     }
 
     private void expandShade() {
-            try {
-                IStatusBarService.Stub.asInterface(
-                        ServiceManager.getService(mContext.STATUS_BAR_SERVICE)).expandNotificationsPanel();
-            } catch (RemoteException e) {
-                // A RemoteException is like a cold
-                // Let's hope we don't catch one!
-            }
+        try {
+            IStatusBarService.Stub.asInterface(
+                    ServiceManager.getService(mContext.STATUS_BAR_SERVICE)).expandNotificationsPanel();
+        } catch (RemoteException e) {
+            // A RemoteException is like a cold
+            // Let's hope we don't catch one!
+        }
     }
 
     private void expandShadeSettings() {
-            try {
-                IStatusBarService.Stub.asInterface(
-                        ServiceManager.getService(mContext.STATUS_BAR_SERVICE)).expandSettingsPanel();
-            } catch (RemoteException e) {
-                // A RemoteException is like a cold
-                // Let's hope we don't catch one!
+        // There is no check to see if shade is already expanded, so longpressing it
+        // while SettingsPanel is expanded doesn't do anything. This way, it at least
+        // closes the notification shade on longress if it's open
+        // Stupid way, I know LOL
+        try {
+            IStatusBarService.Stub.asInterface(
+                    ServiceManager.getService(mContext.STATUS_BAR_SERVICE)).collapsePanels();
+        } catch (RemoteException e) {
+            // A RemoteException is like a cold
+            // Let's hope we don't catch one!
+        }
+
+        try {
+            IStatusBarService.Stub.asInterface(
+                    ServiceManager.getService(mContext.STATUS_BAR_SERVICE)).expandSettingsPanel();
+        } catch (RemoteException e) {
+            // A RemoteException is like a cold
+            // Let's hope we don't catch one!
+        }
+    }
+
+    private void toggletorch() {
+ 	 if (mFlashlightController.isAvailable()) {
+                    mFlashlightController.setFlashlight(!mFlashlightController.isEnabled());
+	}
+    }
+
+  private void expanddesktop() {
+	toggleexpand();	
+	mObserver = new ExpandedDesktopObserver(mHandler);
+    }
+
+    private void userConfigurableSettings() {
+        mExpandedDesktopState = STATE_USER_CONFIGURABLE;
+        writeValue("");
+        WindowManagerPolicyControl.reloadFromSetting(mContext);
+    }
+
+    private int getExpandedDesktopState(ContentResolver cr) {
+        String value = Settings.Global.getString(cr, Settings.Global.POLICY_CONTROL);
+        if ("immersive.full=*".equals(value)) {
+            return STATE_ENABLE_FOR_ALL;
+        }
+        return STATE_USER_CONFIGURABLE;
+    }
+
+    private void writeValue(String value) {
+        Settings.Global.putString(mContext.getContentResolver(),
+             Settings.Global.POLICY_CONTROL, value);
+    }
+
+    protected void toggleexpand() {
+	 int state = mExpandedDesktopState;
+        switch (state) {
+            case STATE_ENABLE_FOR_ALL:
+                userConfigurableSettings();
+                break;
+            case STATE_USER_CONFIGURABLE:
+                enableForAll();
+                break;
+        }
+    }
+
+    private void enableForAll() {
+        mExpandedDesktopState = STATE_ENABLE_FOR_ALL;
+        writeValue("immersive.full=*");
+    }
+
+    private int getExpandedDesktopStyle() {
+        return Settings.Global.getInt(mContext.getContentResolver(),
+                Settings.Global.POLICY_CONTROL_STYLE,
+                WindowManagerPolicyControl.ImmersiveDefaultStyles.IMMERSIVE_FULL);
+    }
+
+  private class ExpandedDesktopObserver extends ContentObserver {
+        public ExpandedDesktopObserver(Handler handler) {
+            super(handler);
+        }
+
+        @Override
+        public void onChange(boolean selfChange) {
+        }
+
+        public void startObserving() {
+            mExpandedDesktopState = getExpandedDesktopState(mContext.getContentResolver());
+            mExpandedDesktopStyle = getExpandedDesktopStyle();
+            mContext.getContentResolver().registerContentObserver(
+                Settings.Global.getUriFor(Settings.Global.POLICY_CONTROL),
+                    false, mObserver);
+            mContext.getContentResolver().registerContentObserver(
+                Settings.Global.getUriFor(Settings.Global.POLICY_CONTROL_STYLE),
+                    false, mObserver);
+        }
+
+        public void endObserving() {
+            mContext.getContentResolver().unregisterContentObserver(mObserver);
+        }
+    }
+
+	
+
+
+    private final Object mScreenrecordLock = new Object();	
+    final Runnable mScreenrecordTimeout = new Runnable() {
+        @Override
+        public void run() {
+            synchronized (mScreenrecordLock) {
+                if (mScreenrecordConnection != null) {
+                    mContext.unbindService(mScreenrecordConnection);
+                    mScreenrecordConnection = null;
+                    mRecording = false;
+                }
             }
+        }
+    };
+
+    private void takeRecord() {
+        synchronized (mScreenrecordLock) {
+            if (mScreenrecordConnection != null) {
+                return;
+            }
+            Intent intent = new Intent(mContext, TakeScreenrecordService.class);
+            ServiceConnection conn = new ServiceConnection() {
+                @Override
+                public void onServiceConnected(ComponentName name, IBinder service) {
+                    synchronized (mScreenrecordLock) {
+                        if (mScreenrecordConnection != this) {
+                            return;
+                        }
+
+                        Messenger messenger = new Messenger(service);
+                        Message msg = Message.obtain(null, 1);
+                        final ServiceConnection myConn = this;
+                        Handler h = new Handler(mHandler.getLooper()) {
+                            @Override
+                            public void handleMessage(Message msg) {
+                                synchronized (mScreenrecordLock) {
+                                    if (mScreenrecordConnection == myConn) {
+                                        mContext.unbindService(mScreenrecordConnection);
+                                        mScreenrecordConnection = null;
+                                        mRecording = false;
+                                        mHandler.removeCallbacks(mScreenrecordTimeout);
+                                    }
+                                }
+                            }
+                        };
+                        msg.replyTo = new Messenger(h);
+                        msg.arg1 = msg.arg2 = 0;
+
+                        // Take the screenrecord
+                        try {
+                            messenger.send(msg);
+                        } catch (RemoteException e) {
+                            // Do nothing here
+                        }
+                    }
+                }
+
+                @Override
+                public void onServiceDisconnected(ComponentName name) {
+                    // Do nothing here
+                }
+            };
+
+            if (mContext.bindService(intent, conn, mContext.BIND_AUTO_CREATE)) {
+                mScreenrecordConnection = conn;
+                mRecording = true;
+                mHandler.postDelayed(mScreenrecordTimeout, 100000);
+            }
+        }
+    }
+
+	private final Object mScreenshotLock = new Object();
+   	final Runnable mScreenshotTimeout = new Runnable() {
+        @Override
+        public void run() {
+            synchronized (mScreenshotLock) {
+                if (mScreenshotConnection != null) {
+                    mContext.unbindService(mScreenshotConnection);
+                    mScreenshotConnection = null;
+                }
+            }
+        }
+    };
+
+    private void takescreen() {
+        synchronized (mScreenshotLock) {
+            if (mScreenshotConnection != null) {
+                return;
+            }
+
+            Intent intent = new Intent(mContext, TakeScreenshotService.class);
+            ServiceConnection conn = new ServiceConnection() {
+                @Override
+                public void onServiceConnected(ComponentName name, IBinder service) {
+                    synchronized (mScreenshotLock) {
+                        if (mScreenshotConnection != this) {
+                            return;
+                        }
+
+                        Messenger messenger = new Messenger(service);
+                        Message msg = Message.obtain(null, 1);
+                        final ServiceConnection myConn = this;
+                        Handler h = new Handler(mHandler.getLooper()) {
+                            @Override
+                            public void handleMessage(Message msg) {
+                                synchronized (mScreenshotLock) {
+                                    if (mScreenshotConnection == myConn) {
+                                        mContext.unbindService(mScreenshotConnection);
+                                        mScreenshotConnection = null;
+                                        mHandler.removeCallbacks(mScreenshotTimeout);
+                                    }
+                                }
+                            }
+                        };
+                        msg.replyTo = new Messenger(h);
+                        msg.arg1 = msg.arg2 = 0;
+
+                        // Take the screenshot
+                        try {
+                            messenger.send(msg);
+                        } catch (RemoteException e) {
+                            // Do nothing here
+                        }
+                    }
+                }
+
+                @Override
+                public void onServiceDisconnected(ComponentName name) {
+                    // Do nothing here
+                }
+            };
+
+            if (mContext.bindService(intent, conn, mContext.BIND_AUTO_CREATE)) {
+                mScreenshotConnection = conn;
+                mHandler.postDelayed(mScreenshotTimeout, 10000);
+         	  		 }
+         		}
+		}
+
+	public void killapp() {
+            final Intent intent = new Intent(Intent.ACTION_MAIN);
+            String defaultHomePackage = "com.android.launcher";
+            intent.addCategory(Intent.CATEGORY_HOME);
+            final ResolveInfo res = mContext.getPackageManager().resolveActivity(intent, 0);
+            if (res.activityInfo != null && !res.activityInfo.packageName.equals("android")) {
+                defaultHomePackage = res.activityInfo.packageName;
+            }
+            boolean targetKilled = false;
+            final ActivityManager am = (ActivityManager) mContext
+                    .getSystemService(Activity.ACTIVITY_SERVICE);
+            List<RunningAppProcessInfo> apps = am.getRunningAppProcesses();
+            for (RunningAppProcessInfo appInfo : apps) {
+                int uid = appInfo.uid;
+                // Make sure it's a foreground user application (not system,
+                // root, phone, etc.)
+                if (uid >= Process.FIRST_APPLICATION_UID && uid <= Process.LAST_APPLICATION_UID
+                        && appInfo.importance == RunningAppProcessInfo.IMPORTANCE_FOREGROUND) {
+                    if (appInfo.pkgList != null && (appInfo.pkgList.length > 0)) {
+                        for (String pkg : appInfo.pkgList) {
+                            if (!pkg.equals("com.android.systemui")
+                                   && !pkg.equals(defaultHomePackage)) {
+                                am.forceStopPackage(pkg);
+                                targetKilled = true;
+                                break;
+                            }
+                        }
+                    } else {
+                        Process.killProcess(appInfo.pid);
+                        targetKilled = true;
+                    }
+                }
+                if (targetKilled) {
+                    Toast.makeText(mContext,
+                        R.string.app_killed_message, Toast.LENGTH_SHORT).show();
+                    break;
+        			        }
+        			    }
+       			 }
+
+    private void appPicker() {
+        Intent intent = new Intent(".rr.apppicker.AppPickerActivity");
+        startActivity(intent, true);
+    }
+
+    private void startGallery(){
+        Intent galleryIntent = new Intent(
+                Intent.ACTION_PICK,
+                android.provider.MediaStore.Images.Media.EXTERNAL_CONTENT_URI);
+                startActivity(galleryIntent , true);
     }
 
     private void prepareNavigationBarView() {
@@ -2024,8 +2392,8 @@ public class PhoneStatusBar extends BaseStatusBar implements DemoMode,
 
         mNavigationBarView.setListeners(mRecentsClickListener, mRecentsPreloadOnTouchListener,
                 mLongPressBackRecentsListener, mHomeActionListener, mLongPressHomeListener,
-                mNotificationsClickListener, mNotificationsLongListener);
-        mAssistManager.onConfigurationChanged();
+                mNotificationsClickListener, mNotificationsLongListener , mTorchClickListener ,mCameraClickListener, mCameraLongClickListener , mScreenShotClickListener ,mImmersiveClickListener ,mConfigClickListener ,mConfigLongListener ,mPieClickListener, mScreenClickListener ,mKillClickListener , mAppPickerClickListener );
+        mAssistManager.onConfigurationChanged(); 
     }
 
     // For small-screen devices (read: phones) that lack hardware navigation buttons
@@ -2043,14 +2411,6 @@ public class PhoneStatusBar extends BaseStatusBar implements DemoMode,
         prepareNavigationBarView();
 
         mWindowManager.addView(mNavigationBarView, getNavigationBarLayoutParams());
-    }
-
-    private void removeNavigationBar() {
-        if (DEBUG) Log.d(TAG, "removeNavigationBar: about to remove " + mNavigationBarView);
-        if (mNavigationBarView == null) return;
-
-        mWindowManager.removeView(mNavigationBarView);
-        mNavigationBarView = null;
     }
 
     private void repositionNavigationBar() {
@@ -2422,6 +2782,14 @@ public class PhoneStatusBar extends BaseStatusBar implements DemoMode,
     protected void updateRowStates() {
         super.updateRowStates();
         mNotificationPanel.notifyVisibleChildrenChanged();
+    }
+
+    protected boolean hasActiveVisibleNotifications() {
+        return mNotificationData.hasActiveVisibleNotifications();
+    }
+
+    protected boolean hasActiveClearableNotifications() {
+        return mNotificationData.hasActiveClearableNotifications();
     }
 
     @Override
@@ -3034,6 +3402,7 @@ public class PhoneStatusBar extends BaseStatusBar implements DemoMode,
 
     protected void updateHeadsUp(String key, Entry entry, boolean shouldInterrupt,
             boolean alertAgain) {
+        if (!mUseHeadsUp) return;
         final boolean wasHeadsUp = isHeadsUp(key);
         if (wasHeadsUp) {
             if (!shouldInterrupt) {
@@ -3747,7 +4116,8 @@ public class PhoneStatusBar extends BaseStatusBar implements DemoMode,
     public void setImeWindowStatus(IBinder token, int vis, int backDisposition,
             boolean showImeSwitcher) {
         boolean imeShown = (vis & InputMethodService.IME_VISIBLE) != 0;
-        int flags = mNavigationIconHints;
+        int flags = mNavigationBarView != null ?
+                mNavigationBarView.getNavigationIconHints() : mNavigationIconHints;
         if ((backDisposition == InputMethodService.BACK_DISPOSITION_WILL_DISMISS) || imeShown) {
             flags |= NAVIGATION_HINT_BACK_ALT;
         } else {
@@ -4049,24 +4419,7 @@ public class PhoneStatusBar extends BaseStatusBar implements DemoMode,
                 // detach PA Pie when screen is turned off
                 if (mPieController != null) mPieController.detachPie();
             }
-            else if (Intent.ACTION_CONFIGURATION_CHANGED.equals(action)) {
-                Configuration config = mContext.getResources().getConfiguration();
-                try {
-                    // position app sidebar on left if in landscape orientation and device has a navbar
-                    if (mWindowManagerService.hasNavigationBar() &&
-                            config.orientation == Configuration.ORIENTATION_LANDSCAPE) {
-                        mWindowManager.updateViewLayout(mAppSidebar,
-                                getAppSidebarLayoutParams(AppSidebar.SIDEBAR_POSITION_LEFT));
-                        mHandler.postDelayed(new Runnable() {
-                            @Override
-                            public void run() {
-                                mAppSidebar.setPosition(AppSidebar.SIDEBAR_POSITION_LEFT);
-                            }
-                        }, 500);
-                    }
-                } catch (RemoteException e) {
-                }
-            }
+
             else if (Intent.ACTION_SCREEN_ON.equals(action)) {
                 mScreenOn = true;
                 notifyNavigationBarScreenOn(true);
@@ -4123,15 +4476,30 @@ public class PhoneStatusBar extends BaseStatusBar implements DemoMode,
 
 
 
-    public void showRRLogo(boolean show , int color) {
+    public void showRRLogo(boolean show , int color , int style) {
         if (mStatusBarView == null) return;
-        ContentResolver resolver = mContext.getContentResolver();
-        rrLogo = (ImageView) mStatusBarView.findViewById(R.id.rr_logo);
-        rrLogo.setColorFilter(color, Mode.SRC_IN);
-        if (rrLogo != null) {
-            rrLogo.setVisibility(show ? (mRRlogo ? View.VISIBLE : View.GONE) : View.GONE);
+
+   if (!show) {
+            rrLogo.setVisibility(View.GONE);
+            return;
         }
-    }
+        rrLogo.setColorFilter(color, Mode.SRC_IN);
+        if (style == 0) {
+            rrLogo.setVisibility(View.GONE);
+ 	    rrLogo = (ImageView) mStatusBarView.findViewById(R.id.left_rr_logo);
+        } else if (style == 1) {
+            rrLogo.setVisibility(View.GONE);        
+	    rrLogo = (ImageView) mStatusBarView.findViewById(R.id.center_rr_logo);
+        }   else if (style == 2) {
+            rrLogo.setVisibility(View.GONE);
+	    rrLogo = (ImageView) mStatusBarView.findViewById(R.id.rr_logo);       
+        } else if (style == 3) {
+            rrLogo.setVisibility(View.GONE);
+	    rrLogo = (ImageView) mStatusBarView.findViewById(R.id.before_icons_rr_logo);       
+        }
+        rrLogo.setVisibility(View.VISIBLE);
+	}
+  
 
     private void resetUserExpandedStates() {
         ArrayList<Entry> activeNotifications = mNotificationData.getActiveNotifications();
@@ -5499,16 +5867,20 @@ public class PhoneStatusBar extends BaseStatusBar implements DemoMode,
             }
 
             if (hijackRecentsLongPress) {
-                // If there is a user-selected, registered handler for the
-                // recents long press, start the Intent.  Otherwise,
-                // perform the default action, which is last app switching.
-
-                // Copy it so the value doesn't change between now and when the activity is started.
-                ComponentName customRecentsLongPressHandler = mCustomRecentsLongPressHandler;
-                if (customRecentsLongPressHandler != null) {
-                    startCustomRecentsLongPressActivity(customRecentsLongPressHandler);
+                if (isRecentAppsVisible() && hasRecentApps()) {
+                    clearRecentApps();
                 } else {
-                    ActionUtils.switchToLastApp(mContext, mCurrentUserId);
+                    // If there is a user-selected, registered handler for the
+                    // recents long press, start the Intent.  Otherwise,
+                    // perform the default action, which is last app switching.
+
+                    // Copy it so the value doesn't change between now and when the activity is started.
+                    ComponentName customRecentsLongPressHandler = mCustomRecentsLongPressHandler;
+                    if (customRecentsLongPressHandler != null) {
+                        startCustomRecentsLongPressActivity(customRecentsLongPressHandler);
+                    } else {
+                        ActionUtils.switchToLastApp(mContext, mCurrentUserId);
+                    }
                 }
             }
         } catch (RemoteException e) {
@@ -5838,14 +6210,12 @@ public class PhoneStatusBar extends BaseStatusBar implements DemoMode,
     }
 
     public void setBackgroundBitmap(Bitmap bmp) {
-        if (bmp != null) {
-            if (mBlurRadius != 0) {
-                mBlurredImage = blurBitmap(bmp, mBlurRadius);
-            } else {
-                mBlurredImage = bmp;
-            }
+        if (bmp == null && mBlurredImage == null) return;
+
+        if (bmp != null && mBlurRadius != 0) {
+            mBlurredImage = Blur.blurBitmap(mContext, bmp, mBlurRadius);
         } else {
-            mBlurredImage = null;
+            mBlurredImage = bmp;
         }
 
         mHandler.post(new Runnable() {
@@ -5855,25 +6225,6 @@ public class PhoneStatusBar extends BaseStatusBar implements DemoMode,
             }
         });
     }
-
-    private Bitmap blurBitmap(Bitmap bmp, int radius) {
-        Bitmap out = Bitmap.createBitmap(bmp);
-        RenderScript rs = RenderScript.create(mContext);
-
-        Allocation input = Allocation.createFromBitmap(
-                rs, bmp, MipmapControl.MIPMAP_NONE, Allocation.USAGE_SCRIPT);
-        Allocation output = Allocation.createTyped(rs, input.getType());
-
-        ScriptIntrinsicBlur script = ScriptIntrinsicBlur.create(rs, Element.U8_4(rs));
-        script.setInput(input);
-        script.setRadius(radius);
-        script.forEach(output);
-
-        output.copyTo(out);
-
-        rs.destroy();
-        return out;
-}
 
     public VisualizerView getVisualizer() {
         return mVisualizerView;

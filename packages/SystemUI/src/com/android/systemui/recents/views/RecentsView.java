@@ -370,8 +370,8 @@ public class RecentsView extends FrameLayout implements TaskStackView.TaskStackV
                     Settings.System.SYSTEMUI_RECENTS_MEM_DISPLAY, 1) == 1;
         
         // Get the search bar bounds and measure the search bar layout
-
         Rect searchBarSpaceBounds = new Rect();
+
         if (mSearchBar != null && mConfig.searchBarEnabled) {
             mConfig.getSearchBarBounds(width, height, mConfig.systemInsets.top, searchBarSpaceBounds);
             mSearchBar.measure(
@@ -561,7 +561,7 @@ public class RecentsView extends FrameLayout implements TaskStackView.TaskStackV
         boolean showDate = Settings.System.getIntForUser(mContext.getContentResolver(),
                 Settings.System.RECENTS_FULL_SCREEN_DATE, 0, UserHandle.USER_CURRENT) != 0;
         boolean fullscreenEnabled = Settings.System.getIntForUser(mContext.getContentResolver(),
-                Settings.System.RECENTS_FULL_SCREEN, 0, UserHandle.USER_CURRENT) != 0;
+                Settings.System.IMMERSIVE_RECENTS, 0, UserHandle.USER_CURRENT) != 0;
 
         if (fullscreenEnabled) {
             if (showClock) {

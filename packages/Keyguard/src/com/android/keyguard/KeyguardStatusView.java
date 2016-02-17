@@ -179,7 +179,7 @@ public class KeyguardStatusView extends GridLayout implements
         super.onConfigurationChanged(newConfig);
         mClockView.setTextSize(TypedValue.COMPLEX_UNIT_PX,
                 getResources().getDimensionPixelSize(R.dimen.widget_big_font_size));
-        mClockView.setTypeface(Typeface.create("sans-serif", Typeface.NORMAL));
+        mClockView.setTypeface(Typeface.create("sans-serif-light", Typeface.NORMAL));
         mDateView.setTextSize(TypedValue.COMPLEX_UNIT_PX,
                 getResources().getDimensionPixelSize(R.dimen.widget_label_font_size));
         mOwnerInfo.setTextSize(TypedValue.COMPLEX_UNIT_PX,
@@ -188,7 +188,26 @@ public class KeyguardStatusView extends GridLayout implements
 
     private int getLockClockFont() {
         return Settings.System.getIntForUser(mContext.getContentResolver(),
-                Settings.System.LOCK_CLOCK_FONTS, 0, UserHandle.USER_CURRENT);
+                Settings.System.LOCK_CLOCK_FONTS, 4, UserHandle.USER_CURRENT);
+    }
+
+    public void hideLockscreenItems() {
+        if (Settings.System.getInt(mContext.getContentResolver(),
+                Settings.System.HIDE_LOCKSCREEN_CLOCK, 1) == 1) {
+            mClockView = (TextClock) findViewById(R.id.clock_view);
+            mClockView.setVisibility(View.VISIBLE);
+        } else {
+            mClockView = (TextClock) findViewById(R.id.clock_view);
+            mClockView.setVisibility(View.GONE);
+        }
+        if (Settings.System.getInt(mContext.getContentResolver(),
+                Settings.System.HIDE_LOCKSCREEN_DATE, 1) == 1) {
+            mDateView = (TextClock) findViewById(R.id.date_view);
+            mDateView.setVisibility(View.VISIBLE);
+        } else {
+            mDateView = (TextClock) findViewById(R.id.date_view);
+            mDateView.setVisibility(View.GONE);
+        }
     }
 
     public void refreshTime() {
@@ -207,6 +226,7 @@ public class KeyguardStatusView extends GridLayout implements
         refreshTime();
         refreshAlarmStatus(nextAlarm);
         updateWeatherSettings(false);
+        hideLockscreenItems();
     }
 
     void refreshAlarmStatus(AlarmManager.AlarmClockInfo nextAlarm) {
@@ -249,6 +269,7 @@ public class KeyguardStatusView extends GridLayout implements
         KeyguardUpdateMonitor.getInstance(mContext).registerCallback(mInfoCallback);
         updateWeatherSettings(false);
         mWeatherController.addCallback(this);
+        hideLockscreenItems();
     }
 
     @Override
@@ -435,6 +456,27 @@ public class KeyguardStatusView extends GridLayout implements
         }
         if (lockClockFont == 17) {
             mClockView.setTypeface(Typeface.create("sans-serif-condensed-light", Typeface.ITALIC));
+        }
+        if (lockClockFont == 18) {
+            mClockView.setTypeface(Typeface.create("cursive", Typeface.NORMAL));
+        }
+        if (lockClockFont == 19) {
+            mClockView.setTypeface(Typeface.create("cursive", Typeface.BOLD));
+        }
+        if (lockClockFont == 20) {
+            mClockView.setTypeface(Typeface.create("casual", Typeface.NORMAL));
+        }
+        if (lockClockFont == 21) {
+            mClockView.setTypeface(Typeface.create("serif", Typeface.NORMAL));
+        }
+        if (lockClockFont == 22) {
+            mClockView.setTypeface(Typeface.create("serif", Typeface.ITALIC));
+        }
+        if (lockClockFont == 23) {
+            mClockView.setTypeface(Typeface.create("serif", Typeface.BOLD));
+        }
+        if (lockClockFont == 24) {
+            mClockView.setTypeface(Typeface.create("serif", Typeface.BOLD_ITALIC));
         }
 
         if (mIconNameValue != iconNameValue) {

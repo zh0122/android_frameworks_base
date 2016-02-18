@@ -370,8 +370,6 @@ public class RecentsView extends FrameLayout implements TaskStackView.TaskStackV
                     Settings.System.SYSTEMUI_RECENTS_MEM_DISPLAY, 1) == 1;
         
         // Get the search bar bounds and measure the search bar layout
-        Rect searchBarSpaceBounds = new Rect();
-
         if (mSearchBar != null && mConfig.searchBarEnabled) {
             mConfig.getSearchBarBounds(width, height, mConfig.systemInsets.top, searchBarSpaceBounds);
             mSearchBar.measure(

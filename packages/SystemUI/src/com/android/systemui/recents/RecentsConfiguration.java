@@ -301,13 +301,6 @@ public class RecentsConfiguration {
         return wasEnabled != searchBarEnabled;
     }
 
-    public boolean updateShowSearch(Context context) {
-        boolean wasEnabled = searchBarEnabled;
-        searchBarEnabled = CMSettings.System.getInt(context.getContentResolver(),
-                CMSettings.System.RECENTS_SHOW_SEARCH_BAR, 1) == 1;
-        return wasEnabled != searchBarEnabled;
-    }
-
     /** Updates the system insets */
     public void updateSystemInsets(Rect insets) {
         systemInsets.set(insets);

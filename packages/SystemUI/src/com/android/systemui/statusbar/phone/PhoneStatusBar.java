@@ -1746,6 +1746,7 @@ public class PhoneStatusBar extends BaseStatusBar implements DemoMode,
         filter.addAction(Intent.ACTION_SCREEN_OFF);
         filter.addAction(Intent.ACTION_SCREEN_ON);
         filter.addAction(Intent.ACTION_KEYGUARD_WALLPAPER_CHANGED);
+        filter.addAction(cyanogenmod.content.Intent.ACTION_SCREEN_CAMERA_GESTURE);
         context.registerReceiverAsUser(mBroadcastReceiver, UserHandle.ALL, filter, null, null);
 
         IntentFilter demoFilter = new IntentFilter();
@@ -3029,8 +3030,7 @@ private final View.OnClickListener mKillClickListener = new View.OnClickListener
         }
 
         // apply user lockscreen image
-        if (backdropBitmap == null && mMediaMetadata == null &&
-                !mNotificationPanel.hasExternalKeyguardView()) {
+        if (backdropBitmap == null && !mNotificationPanel.hasExternalKeyguardView()) {
             backdropBitmap = mKeyguardWallpaper;
         }
 
@@ -4428,6 +4428,17 @@ private final View.OnClickListener mKillClickListener = new View.OnClickListener
                         Context.WALLPAPER_SERVICE);
                 mKeyguardWallpaper = wm.getKeyguardBitmap();
                 updateMediaMetaData(true);
+            } else if (cyanogenmod.content.Intent.ACTION_SCREEN_CAMERA_GESTURE.equals(action)) {
+                boolean userSetupComplete = Settings.Secure.getInt(mContext.getContentResolver(),
+                        Settings.Secure.USER_SETUP_COMPLETE, 0) != 0;
+                if (!userSetupComplete) {
+                    if (DEBUG) Log.d(TAG, String.format(
+                            "userSetupComplete = %s, ignoring camera launch gesture.",
+                            userSetupComplete));
+                    return;
+                }
+
+                onCameraLaunchGestureDetected(StatusBarManager.CAMERA_LAUNCH_SOURCE_SCREEN_GESTURE);
             }
         }
     };
@@ -5459,7 +5470,8 @@ private final View.OnClickListener mKillClickListener = new View.OnClickListener
     public void updateStackScrollerState(boolean goingToFullShade) {
         if (mStackScroller == null) return;
         boolean onKeyguard = mState == StatusBarState.KEYGUARD;
-        mStackScroller.setHideSensitive(isLockscreenPublicMode(), goingToFullShade);
+        mStackScroller.setHideSensitive(onKeyguard
+                && !userAllowsPrivateNotificationsInPublic(mCurrentUserId), goingToFullShade);
         mStackScroller.setDimmed(onKeyguard, false /* animate */);
         mStackScroller.setExpandingEnabled(!onKeyguard);
         ActivatableNotificationView activatedChild = mStackScroller.getActivatedChild();

@@ -24,9 +24,6 @@
          frameworks/base/core/res/MakeJavaSymbols.sed for how to easily generate
          this.
     -->
-    <!-- External CM specific core services -->
-    <java-symbol type="array" name="config_externalCMServices" />
-
     <java-symbol type="bool" name="config_singleStageCameraKey" />
     <java-symbol type="integer" name="config_longPressOnMenuBehavior" />
     <java-symbol type="integer" name="config_longPressOnAppSwitchBehavior" />
@@ -157,4 +154,7 @@
     <java-symbol type="string" name="notify_battery_fully_charged_title" />
     <java-symbol type="string" name="notify_battery_fully_charged_text" />
 
+    <!-- Uicc hotswapped event configuration needed notification -->
+    <java-symbol type="string" name="uicc_hot_swapped_event_title" />
+    <java-symbol type="string" name="uicc_hot_swapped_event_text" />
 </resources>

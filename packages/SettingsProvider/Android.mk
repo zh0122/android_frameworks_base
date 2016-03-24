@@ -12,6 +12,8 @@ LOCAL_PACKAGE_NAME := SettingsProvider
 LOCAL_CERTIFICATE := platform
 LOCAL_PRIVILEGED_MODULE := true
 
+
+LOCAL_PROGUARD_FLAG_FILES := proguard.flags
 include $(BUILD_PACKAGE)
 
 ########################

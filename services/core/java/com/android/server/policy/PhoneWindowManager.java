@@ -134,9 +134,6 @@ import com.android.internal.R;
 import com.android.internal.policy.IKeyguardService;
 import com.android.internal.statusbar.IStatusBarService;
 import com.android.internal.util.ScreenShapeHelper;
-import com.android.internal.util.gesture.EdgeGesturePosition;
-import com.android.internal.util.gesture.EdgeServiceConstants;
-import com.android.internal.util.slim.Converter;
 import com.android.internal.view.RotationPolicy;
 import com.android.internal.widget.PointerLocationView;
 import com.android.server.GestureLauncherService;
@@ -1051,68 +1048,9 @@ public class PhoneWindowManager implements WindowManagerPolicy {
     private ImmersiveModeConfirmation mImmersiveModeConfirmation;
 
     private SystemGesturesPointerEventListener mSystemGestures;
+
     private OPGesturesListener mOPGestures;
 
-    private EdgeGestureManager.EdgeGestureActivationListener mEdgeGestureActivationListener
-            = new EdgeGestureManager.EdgeGestureActivationListener() {
-
-        @Override
-        public void onEdgeGestureActivation(int touchX, int touchY,
-                EdgeGesturePosition position, int flags) {
-            WindowState target = null;
-
-            if (position == EdgeGesturePosition.TOP) {
-                target = mStatusBar;
-            } else if (position == EdgeGesturePosition.BOTTOM  && mNavigationBarOnBottom) {
-                target = mNavigationBar;
-            } else if (position == EdgeGesturePosition.LEFT
-                    && !mNavigationBarOnBottom && mNavigationBarLeftInLandscape) {
-                target = mNavigationBar;
-            } else if (position == EdgeGesturePosition.RIGHT && !mNavigationBarOnBottom) {
-                target = mNavigationBar;
-            }
-
-            if (target != null) {
-                requestTransientBars(target);
-                dropEventsUntilLift();
-                mEdgeListenerActivated = true;
-            } else {
-                restoreListenerState();
-            }
-        }
-    };
-    private EdgeGestureManager mEdgeGestureManager = null;
-    private int mLastEdgePositions = 0;
-    private boolean mEdgeListenerActivated = false;
-    private boolean mUsingEdgeGestureServiceForGestures = false;
-
-    private void updateEdgeGestureListenerState() {
-        int flags = 0;
-        if (mUsingEdgeGestureServiceForGestures) {
-            flags = EdgeServiceConstants.LONG_LIVING | EdgeServiceConstants.UNRESTRICTED;
-            if (mStatusBar != null && !mStatusBar.isVisibleLw()) {
-                flags |= EdgeGesturePosition.TOP.FLAG;
-            }
-            if (mNavigationBar != null && !mNavigationBar.isVisibleLw() && !isStatusBarKeyguard() && !immersiveModeImplementsPie()) {
-                if (mNavigationBarOnBottom) {
-                    flags |= EdgeGesturePosition.BOTTOM.FLAG;
-                } else if (mNavigationBarLeftInLandscape) {
-                    flags |= EdgeGesturePosition.LEFT.FLAG;
-                } else {
-                    flags |= EdgeGesturePosition.RIGHT.FLAG;
-                }
-            }
-        }
-        if (mEdgeListenerActivated) {
-            mEdgeGestureActivationListener.restoreListenerState();
-            mEdgeListenerActivated = false;
-        }
-        if (flags != mLastEdgePositions) {
-            mEdgeGestureManager.updateEdgeGestureActivationListener(mEdgeGestureActivationListener,
-                    flags);
-            mLastEdgePositions = flags;
-        }
-    }
 
     IStatusBarService getStatusBarService() {
         synchronized (mServiceAquireLock) {
@@ -2376,15 +2314,6 @@ public class PhoneWindowManager implements WindowManagerPolicy {
 
             final boolean useEdgeService = CMSettings.System.getIntForUser(resolver,
                     CMSettings.System.USE_EDGE_SERVICE_FOR_GESTURES, 0, UserHandle.USER_CURRENT) == 1;
-            if (useEdgeService ^ mUsingEdgeGestureServiceForGestures && mSystemReady) {
-                if (!mUsingEdgeGestureServiceForGestures && useEdgeService) {
-                    mUsingEdgeGestureServiceForGestures = true;
-                    mWindowManagerFuncs.unregisterPointerEventListener(mSystemGestures);
-                } else if (mUsingEdgeGestureServiceForGestures && !useEdgeService) {
-                    mUsingEdgeGestureServiceForGestures = false;
-                    mWindowManagerFuncs.registerPointerEventListener(mSystemGestures);
-                }
-                updateEdgeGestureListenerState();
 
             boolean devForceNavbar = CMSettings.Secure.getIntForUser(resolver,
                     CMSettings.Secure.DEV_FORCE_SHOW_NAVBAR, 0, UserHandle.USER_CURRENT) == 1;
@@ -2421,70 +2350,6 @@ public class PhoneWindowManager implements WindowManagerPolicy {
 
             mUserRotationAngles = Settings.System.getInt(resolver,
                     Settings.System.ACCELEROMETER_ROTATION_ANGLES, -1);
-
-            // Navbr on/off and custom dimensions
-            setHasNavigationBar();
-
-            // Navbar dimensions
-            mNavigationBarHeight =
-                    Settings.System.getIntForUser(mContext.getContentResolver(),
-                            Settings.System.NAVIGATION_BAR_HEIGHT, -2,
-                            UserHandle.USER_CURRENT);
-            if (mNavigationBarHeight == -2) {
-                mNavigationBarHeight = mContext.getResources().getDimensionPixelSize(
-                        com.android.internal.R.dimen.navigation_bar_height);
-            } else {
-                mNavigationBarHeight =
-                        Converter.dpToPx(mContext, mNavigationBarHeight);
-            }
-            mNavigationBarHeightLandscape =
-                    Settings.System.getIntForUser(mContext.getContentResolver(),
-                            Settings.System.NAVIGATION_BAR_HEIGHT_LANDSCAPE, -2,
-                            UserHandle.USER_CURRENT);
-            if (mNavigationBarHeightLandscape == -2) {
-                mNavigationBarHeightLandscape = mContext.getResources().getDimensionPixelSize(
-                        com.android.internal.R.dimen.navigation_bar_height_landscape);
-            } else {
-                mNavigationBarHeightLandscape =
-                        Converter.dpToPx(mContext, mNavigationBarHeightLandscape);
-            }
-
-            mNavigationBarWidth =
-                    Settings.System.getIntForUser(mContext.getContentResolver(),
-                            Settings.System.NAVIGATION_BAR_WIDTH, -2,
-                            UserHandle.USER_CURRENT);
-            if (mNavigationBarWidth == -2) {
-                mNavigationBarWidth = mContext.getResources().getDimensionPixelSize(
-                        com.android.internal.R.dimen.navigation_bar_width);
-            } else {
-                mNavigationBarWidth =
-                        Converter.dpToPx(mContext, mNavigationBarWidth);
-            }
-
-            if (!mHasNavigationBar) {
-                // Set the navigation bar's dimensions to 0
-                mNavigationBarWidthForRotation[mPortraitRotation]
-                        = mNavigationBarWidthForRotation[mUpsideDownRotation]
-                        = mNavigationBarWidthForRotation[mLandscapeRotation]
-                        = mNavigationBarWidthForRotation[mSeascapeRotation]
-                        = mNavigationBarHeightForRotation[mPortraitRotation]
-                        = mNavigationBarHeightForRotation[mUpsideDownRotation]
-                        = mNavigationBarHeightForRotation[mLandscapeRotation]
-                        = mNavigationBarHeightForRotation[mSeascapeRotation] = 0;
-            } else {
-                // Height of the navigation bar when presented horizontally at bottom *******
-                mNavigationBarHeightForRotation[mPortraitRotation] =
-                mNavigationBarHeightForRotation[mUpsideDownRotation] = mNavigationBarHeight;
-
-               mNavigationBarHeightForRotation[mLandscapeRotation] =
-                mNavigationBarHeightForRotation[mSeascapeRotation] = mNavigationBarHeightLandscape;
-
-                // Width of the navigation bar when presented vertically along one side
-                mNavigationBarWidthForRotation[mPortraitRotation] =
-                mNavigationBarWidthForRotation[mUpsideDownRotation] =
-                mNavigationBarWidthForRotation[mLandscapeRotation] =
-                mNavigationBarWidthForRotation[mSeascapeRotation] = mNavigationBarWidth;
-            }
 
 	     //Three Finger Gesture
             boolean threeFingerGesture = Settings.System.getIntForUser(resolver,

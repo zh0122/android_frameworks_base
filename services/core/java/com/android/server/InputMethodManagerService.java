@@ -145,6 +145,7 @@ import java.util.Locale;
 
 import cyanogenmod.hardware.CMHardwareManager;
 import cyanogenmod.providers.CMSettings;
+import cyanogenmod.hardware.CMHardwareManager;
 
 import org.cyanogenmod.internal.util.QSUtils;
 import org.cyanogenmod.internal.util.QSUtils.OnQSChanged;
@@ -203,6 +204,7 @@ public class InputMethodManagerService extends IInputMethodManager.Stub
     private final HardKeyboardListener mHardKeyboardListener;
     private final WindowManagerService mWindowManagerService;
     private final AppOpsManager mAppOpsManager;
+    private CMHardwareManager mCMHardware;
 
     final InputBindResult mNoBinding = new InputBindResult(null, null, null, -1, -1);
 
@@ -1085,6 +1087,8 @@ public class InputMethodManagerService extends IInputMethodManager.Stub
                     mSettings.getEnabledInputMethodListLocked(), newUserId,
                     mContext.getBasePackageName());
         }
+        updateTouchHovering();
+        updateTouchSensitivity();
 
         updateTouchHovering();
         updateTouchSensitivity();
@@ -1738,7 +1742,8 @@ public class InputMethodManagerService extends IInputMethodManager.Stub
     }
 
     private boolean shouldShowImeSwitcherLocked(int visibility) {
-        if (!mShowOngoingImeSwitcherForPhones) return false;
+        // Don't use this config here since it's not hard coded anymore
+//      if (!mShowOngoingImeSwitcherForPhones) return false;
         if (mSwitchingDialog != null) return false;
         if (isScreenLocked()) return false;
         if ((visibility & InputMethodService.IME_ACTIVE) == 0) return false;
@@ -1820,7 +1825,7 @@ public class InputMethodManagerService extends IInputMethodManager.Stub
             updateSystemUiLocked(token, vis, backDisposition);
         }
     }
-
+    
     // Caution! This method is called in this class. Handle multi-user carefully
     private void updateSystemUiLocked(IBinder token, int vis, int backDisposition) {
         if (!calledWithValidToken(token)) {
@@ -1844,39 +1849,42 @@ public class InputMethodManagerService extends IInputMethodManager.Stub
                 mStatusBar.setImeWindowStatus(token, vis, backDisposition,
                         needsToShowImeSwitcher);
             }
-            final InputMethodInfo imi = mMethodMap.get(mCurMethodId);
-            if (imi != null && needsToShowImeSwitcher) {
-                // Used to load label
-                final CharSequence title = mRes.getText(
-                        com.android.internal.R.string.select_input_method);
-                final CharSequence summary = InputMethodUtils.getImeAndSubtypeDisplayName(
-                        mContext, imi, mCurrentSubtype);
-                mImeSwitcherNotification.setContentTitle(title)
-                        .setContentText(summary)
-                        .setContentIntent(mImeSwitchPendingIntent);
-                    if (mNotificationManager != null) {
-                    mNotificationManager.notifyAsUser(null,
-                            com.android.internal.R.string.select_input_method,
-                            mImeSwitcherNotification.build(), UserHandle.ALL);
-                    mNotificationShown = true;
-                }
-                publishImeSelectorCustomTile(imi);
-            } else {
-                if (mNotificationShown && mNotificationManager != null) {
-                    if (DEBUG) {
-                        Slog.d(TAG, "--- hide notification");
+            // this way, we pipe the hint and only control show/hide notification
+            if (mShowOngoingImeSwitcherForPhones) {
+                final InputMethodInfo imi = mMethodMap.get(mCurMethodId);
+                if (imi != null && needsToShowImeSwitcher) {
+                    // Used to load label
+                    final CharSequence title = mRes.getText(
+                            com.android.internal.R.string.select_input_method);
+                    final CharSequence summary = InputMethodUtils.getImeAndSubtypeDisplayName(
+                            mContext, imi, mCurrentSubtype);
+                    mImeSwitcherNotification.setContentTitle(title)
+                            .setContentText(summary)
+                            .setContentIntent(mImeSwitchPendingIntent);
+                        if (mNotificationManager != null) {
+                        mNotificationManager.notifyAsUser(null,
+                                com.android.internal.R.string.select_input_method,
+                                mImeSwitcherNotification.build(), UserHandle.ALL);
+                        mNotificationShown = true;
                     }
-                    mNotificationManager.cancelAsUser(null,
-                            com.android.internal.R.string.select_input_method, UserHandle.ALL);
-                    mNotificationShown = false;
+                    publishImeSelectorCustomTile(imi);
+                } else {
+                    if (mNotificationShown && mNotificationManager != null) {
+                        if (DEBUG) {
+                            Slog.d(TAG, "--- hide notification");
+                        }
+                        mNotificationManager.cancelAsUser(null,
+                                com.android.internal.R.string.select_input_method, UserHandle.ALL);
+                        mNotificationShown = false;
+                    }
+                    unpublishImeSelectorCustomTile();
                 }
-                unpublishImeSelectorCustomTile();
             }
         } finally {
             Binder.restoreCallingIdentity(ident);
         }
     }
-
+    
     @Override
     public void registerSuggestionSpansForNotification(SuggestionSpan[] spans) {
         if (!calledFromValidUser()) {
@@ -1977,14 +1985,13 @@ public class InputMethodManagerService extends IInputMethodManager.Stub
             // There is no longer an input method set, so stop any current one.
             unbindCurrentMethodLocked(true, false);
         }
-        // code to disable the CM Phone IME switcher with config_show_cmIMESwitcher set = false
-        try {
-            mShowOngoingImeSwitcherForPhones = CMSettings.System.getInt(mContext.getContentResolver(),
-            CMSettings.System.STATUS_BAR_IME_SWITCHER) == 1;
-        } catch (CMSettings.CMSettingNotFoundException e) {
-            mShowOngoingImeSwitcherForPhones = mRes.getBoolean(
-            com.android.internal.R.bool.config_show_cmIMESwitcher);
-        }
+
+        // we always show the IME switcher notification by default and we
+        // pipe IME hints regardless of notification enabled state
+        mShowOngoingImeSwitcherForPhones =
+                CMSettings.System.getIntForUser(mContext.getContentResolver(),
+                        CMSettings.System.STATUS_BAR_IME_SWITCHER, 1, UserHandle.USER_CURRENT) == 1;
+
         // Here is not the perfect place to reset the switching controller. Ideally
         // mSwitchingController and mSettings should be able to share the same state.
         // TODO: Make sure that mSwitchingController and mSettings are sharing the
@@ -1992,6 +1999,27 @@ public class InputMethodManagerService extends IInputMethodManager.Stub
         mSwitchingController.resetCircularListLocked(mContext);
 
     }
+    
+    private void updateTouchSensitivity() {
+        if (!mCMHardware.isSupported(CMHardwareManager.FEATURE_HIGH_TOUCH_SENSITIVITY)) {
+            return;
+        }
+        boolean touchSensitivityEnable = CMSettings.System.getInt(mContext.getContentResolver(),
+                CMSettings.System.HIGH_TOUCH_SENSITIVITY_ENABLE, 0) == 1;
+        mCMHardware.set(CMHardwareManager.FEATURE_HIGH_TOUCH_SENSITIVITY,
+                touchSensitivityEnable);
+    }
+
+    private void updateTouchHovering() {
+        if (!mCMHardware.isSupported(CMHardwareManager.FEATURE_TOUCH_HOVERING)) {
+            return;
+        }
+        boolean touchHovering = CMSettings.Secure.getInt(mContext.getContentResolver(),
+                CMSettings.Secure.FEATURE_TOUCH_HOVERING, 0) == 1;
+        mCMHardware.set(CMHardwareManager.FEATURE_TOUCH_HOVERING,
+                touchHovering);
+    }
+
 
     private void updateTouchSensitivity() {
         if (!mCMHardware.isSupported(CMHardwareManager.FEATURE_HIGH_TOUCH_SENSITIVITY)) {

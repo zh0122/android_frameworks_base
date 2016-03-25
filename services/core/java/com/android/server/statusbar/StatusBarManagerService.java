@@ -17,6 +17,7 @@
 package com.android.server.statusbar;
 
 import android.app.StatusBarManager;
+import android.content.Intent;
 import android.os.Binder;
 import android.os.Bundle;
 import android.os.Handler;
@@ -504,15 +505,6 @@ public class StatusBarManagerService extends IStatusBarService.Stub {
     }
 
     @Override
-    public void toggleOrientationListener(boolean enable) {
-        if (mBar != null) {
-            try {
-                mBar.toggleOrientationListener(enable);
-            } catch (RemoteException ex) {}
-        }
-    }
-
-    @Override
     public void setCurrentUser(int newUserId) {
         if (SPEW) Slog.d(TAG, "Setting current user to user " + newUserId);
         mCurrentUserId = newUserId;
@@ -566,39 +558,41 @@ public class StatusBarManagerService extends IStatusBarService.Stub {
     }
 
     @Override
-
     public void setAutoRotate(boolean enabled) {
         if (mBar != null) {
             try {
                 mBar.setAutoRotate(enabled);
- 	} catch (RemoteException ex) {}
+            } catch (RemoteException ex) {}
+        }
     }
-  }
-
-
-    public void toggleLastApp() {
+	
+	/**
+     * Ask keyguard to invoke a custom intent after dismissing keyguard
+     * @hide
+     */
+    @Override
+    public void showCustomIntentAfterKeyguard(Intent intent) {
+        enforceStatusBarService();
         if (mBar != null) {
             try {
-                mBar.toggleLastApp();
+                mBar.showCustomIntentAfterKeyguard(intent);
             } catch (RemoteException ex) {}
         }
     }
 
+    /**
+     * Let systemui know screen pinning state change. This is independent of the
+     * showScreenPinningRequest() call as it does not reflect state
+     *
+     * @hide
+     */
     @Override
-    public void toggleKillApp() {
+    public void screenPinningStateChanged(boolean enabled) {
         if (mBar != null) {
             try {
-                mBar.toggleKillApp();
-            } catch (RemoteException ex) {}
-        }
-    }
-
-    @Override
-    public void toggleScreenshot() {
-        if (mBar != null) {
-            try {
-                mBar.toggleScreenshot();
-            } catch (RemoteException ex) {}
+                mBar.screenPinningStateChanged(enabled);
+            } catch (RemoteException ex) {
+            }
         }
     }
 

@@ -49,6 +49,9 @@ import android.graphics.RectF;
 import android.graphics.Shader;
 import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.Drawable;
+import android.hardware.camera2.CameraManager;
+import android.hardware.camera2.CameraCharacteristics;
+import android.hardware.camera2.CameraAccessException;
 import android.Manifest;
 import android.media.AudioManager;
 import android.net.ConnectivityManager;
@@ -141,6 +144,7 @@ class GlobalActions implements DialogInterface.OnDismissListener, DialogInterfac
     private boolean mHasTelephony;
     private boolean mHasVibrator;
     private final boolean mShowSilentToggle;
+    private static boolean mTorchEnabled = false;
 
     // Power menu customizations
     String mActions;
@@ -270,14 +274,22 @@ class GlobalActions implements DialogInterface.OnDismissListener, DialogInterfac
         if (powermenuAnimations == 10) {
                 attrs.windowAnimations = R.style.PowerMenuTranslucentAnimation;
                 attrs.gravity = Gravity.BOTTOM|Gravity.CENTER_HORIZONTAL;
-        }    
-	attrs.alpha = setPowerMenuAlpha();
-	mDialog.getWindow().setDimAmount(setPowerMenuDialogDim());      
-        mDialog.getWindow().setAttributes(attrs);
-        mDialog.show();
-        mDialog.getWindow().getDecorView().setSystemUiVisibility(View.STATUS_BAR_DISABLE_EXPAND);
-    }
+        } 
 
+        if (Settings.System.getInt(mContext.getContentResolver(),
+                    Settings.System.TRANSPARENT_POWER_MENU, 100) != 100) {
+                attrs.alpha = setPowerMenuAlpha();
+            }
+
+            mDialog.getWindow().setAttributes(attrs);
+            if (Settings.System.getInt(mContext.getContentResolver(),
+                    Settings.System.TRANSPARENT_POWER_DIALOG_DIM, 50) != 50) {
+                mDialog.getWindow().setDimAmount(setPowerMenuDialogDim());
+            }
+            mDialog.show();
+            mDialog.getWindow().getDecorView().setSystemUiVisibility(View.STATUS_BAR_DISABLE_EXPAND); 
+        }  
+	
     private int getPowermenuAnimations() {
         return Settings.System.getInt(mContext.getContentResolver(),
                 Settings.System.POWER_MENU_ANIMATIONS, 0);
@@ -424,6 +436,8 @@ class GlobalActions implements DialogInterface.OnDismissListener, DialogInterfac
                         Settings.Global.BUGREPORT_IN_POWER_MENU, 0) != 0 && isCurrentUserOwner()) {
                     mItems.add(getBugReportAction());
                 }
+            } else if (GLOBAL_ACTION_KEY_TORCH.equals(actionKey)) {
+                mItems.add(getTorchToggleAction());
             } else if (GLOBAL_ACTION_KEY_SILENT.equals(actionKey)) {
                 if (mShowSilentToggle) {
                     mItems.add(mSilentModeAction);
@@ -566,6 +580,38 @@ class GlobalActions implements DialogInterface.OnDismissListener, DialogInterfac
 
             public void onPress() {
                 takeScreenrecord();
+            }
+
+            public boolean showDuringKeyguard() {
+                return true;
+            }
+
+            public boolean showBeforeProvisioning() {
+                return false;
+            }
+        };
+    }
+
+
+    private Action getTorchToggleAction() {
+        return new SinglePressAction(com.android.internal.R.drawable.ic_lock_torch,
+                R.string.global_action_torch) {
+
+            public void onPress() {
+                try {
+                    CameraManager cameraManager = (CameraManager)
+                            mContext.getSystemService(Context.CAMERA_SERVICE);
+                    for (final String cameraId : cameraManager.getCameraIdList()) {
+                        CameraCharacteristics characteristics =
+                            cameraManager.getCameraCharacteristics(cameraId);
+                        int orient = characteristics.get(CameraCharacteristics.LENS_FACING);
+                        if (orient == CameraCharacteristics.LENS_FACING_BACK) {
+                            cameraManager.setTorchMode(cameraId, !mTorchEnabled);
+                            mTorchEnabled = !mTorchEnabled;
+                        }
+                    }
+                } catch (CameraAccessException e) {
+                }
             }
 
             public boolean showDuringKeyguard() {

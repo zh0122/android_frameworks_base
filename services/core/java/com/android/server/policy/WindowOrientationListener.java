@@ -56,6 +56,10 @@ public abstract class WindowOrientationListener {
     private int mRate;
     private String mSensorType;
     private boolean mUseSystemClockforRotationSensor;
+<<<<<<< HEAD
+=======
+    private boolean mUseSystemClockforSensors;
+>>>>>>> ResurrectionRemix/marshmallow
     private Sensor mSensor;
     private OrientationJudge mOrientationJudge;
     private int mCurrentRotation = -1;
@@ -93,6 +97,11 @@ public abstract class WindowOrientationListener {
                 com.android.internal.R.string.config_orientationSensorType);
         mUseSystemClockforRotationSensor = context.getResources().getBoolean(
                 com.android.internal.R.bool.config_useSystemClockforRotationSensor);
+<<<<<<< HEAD
+=======
+        mUseSystemClockforSensors = context.getResources().getBoolean(
+                com.android.internal.R.bool.config_useSystemClockforSensors);
+>>>>>>> ResurrectionRemix/marshmallow
 
         if (!TextUtils.isEmpty(mSensorType)) {
             List<Sensor> sensors = mSensorManager.getSensorList(Sensor.TYPE_ALL);
@@ -602,7 +611,13 @@ public abstract class WindowOrientationListener {
                 // Reset the orientation listener state if the samples are too far apart in time
                 // or when we see values of (0, 0, 0) which indicates that we polled the
                 // accelerometer too soon after turning it on and we don't have any data yet.
+<<<<<<< HEAD
                 final long now = mUseSystemClockforRotationSensor
+=======
+
+                final long now = mUseSystemClockforRotationSensor
+
+>>>>>>> ResurrectionRemix/marshmallow
                         ? SystemClock.elapsedRealtimeNanos() : event.timestamp;
                 final long then = mLastFilteredTimestampNanos;
                 final float timeDeltaMS = (now - then) * 0.000001f;

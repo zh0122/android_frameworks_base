@@ -48,13 +48,6 @@
     <!-- Screen record notification error title -->
     <string name="screenrecord_notif_error">Unable to record screen</string>
 
-
-    <!-- PA Pie controls -->
-    <string name="pie_date_format">ccc, dd MMM yyyy</string>
-    <string name="pie_hour_format_12">hh:mm</string>
-    <string name="pie_hour_format_24">HH:mm</string>
-    <string name="pie_am_pm">a</string>
-
     <!-- Kill app toast -->
     <string name="app_killed_message">App Killed</string>
 
@@ -125,19 +118,35 @@
     <string name="accessibility_quick_settings_heads_up_changed_off">Heads up turned off.</string>
     <!-- Announcement made when heads up changes to on (not shown on the screen). [CHAR LIMIT=NONE] -->
     <string name="accessibility_quick_settings_heads_up_changed_on">Heads up turned on.</string>
- <string name="quick_settings_heads_up_label">Heads up</string>
+    <string name="quick_settings_heads_up_label">Heads up</string>
 
- <string name="qs_lte_label">LTE</string>
+    <string name="qs_lte_label">LTE</string>
 
- <string name="lte_on">LTE ON </string>
- <string name="lte_off">LTE OFF</string>
+    <string name="lte_on">LTE ON </string>
+    <string name="lte_off">LTE OFF</string>
 
- <string name="quick_settings_themes">Themes</string>
 
-     <!-- NavBar tile -->
-    <string name="quick_settings_navbar_title">NavBar</string>	
-    <string name="quick_settings_navbar_on">NavBar On</string>
-    <string name="quick_settings_navbar_off">NavBar Off</string>
+    <!-- Themes QS Tile -->
+    <string name="quick_settings_themes">Themes</string>
+    <string name="quick_settings_themes_icon_packs">Icon packs</string>
+    <string name="quick_settings_themes_app_theme">App theme</string>
+    <string name="quick_settings_themes_system_theme">System theme</string>
+    <string name="quick_settings_themes_default_theme">Default</string>
+    <string name="quick_settings_themes_match_system">Match system theme</string>
+
+    <string name="quick_settings_themes">Themes</string>
+
+    <!-- Navigation bar Tile -->
+    <string name="quick_settings_navigation_bar">Navigation bar</string>
+    <string name="quick_settings_smartbar_off">SmartBar off</string>
+    <string name="quick_settings_smartbar">SmartBar</string>
+    <string name="quick_settings_fling">Fling gesture</string>
+    <string name="quick_settings_fling_off">Fling gesture off</string>
+
+     <!-- Hw Keys tile -->
+    <string name="quick_settings_hwkeys_title">Hardware Keys</string>	
+    <string name="quick_settings_hwkeys_on">Hardware Keys On</string>
+    <string name="quick_settings_hwkeys_off">Hardware Keys Off</string>
     
     <!-- App Circle Bar tile -->
 	<string name="quick_settings_appcirclebar_title">AppCircleBar</string>
@@ -183,18 +192,6 @@
     <string name="yes">Yes</string>
     <string name="no">No</string>
 
-    <!-- Slim Shortcut Actions -->
-    <string name="shortcut_picker">Slim Shortcuts</string>
-    <string name="shortcut_rotation">Rotation</string>
-    <string name="shortcut_reboot">Reboot</string>
-    <string name="shortcut_recovery">Recovery</string>
-    <string name="shortcut_toggle_title">Action to perform</string>
-
-    <string name="quick_settings_selinux_label">SElinux</string>
-    <string name="quick_settings_selinux_permissive_title">Permissive</string>
-    <string name="quick_settings_selinux_enforcing_title">Enforcing</string>
-
-
     <string name="qs_kill_app">Kill App</string>
 
      <!-- Dialog title for navigation bar button selection -->
@@ -221,6 +218,7 @@
 
    <!-- Content description of the power button for accessibility (not shown on the screen). [CHAR LIMIT=NONE] -->
     <string name="accessibility_expand">Immersive Mode</string>
+
 
 
   <!-- Dialog title for navigation bar button selection -->
@@ -252,6 +250,20 @@
     (not shown on the screen). [CHAR LIMIT=NONE] -->
     <string name="accessibility_app_picker">Application picker</string>
 
-	
+    <!-- Sound QS Tile -->
+    <string name="quick_settings_sound_label">Sound</string>
+    <string name="quick_settings_sound_ring">Ring</string>
+    <string name="quick_settings_sound_vibrate">Vibrate</string>
+    <string name="quick_settings_sound_silent">Silent</string>
+
+     <!-- headset icon switch -->
+    <string name="status_bar_headset">Wired headset</string>
+
+    <!-- vpn icon switch -->
+    <string name="status_bar_vpn">VPN</string>
+
+    <!-- vpn icon switch -->
+    <string name="status_bar_volume">Vibration</string>
+
 </resources>
 

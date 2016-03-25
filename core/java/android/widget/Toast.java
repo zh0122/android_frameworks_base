@@ -410,7 +410,7 @@ public class Toast {
                 if ((Settings.System.getInt(context.getContentResolver(), Settings.System.TOAST_ICON, 1) == 1)) {
                     if (appIcon != null) {
                         ActivityManager am =
-                            (ActivityManager) context.getSystemService(Context.ACTIVITY_SERVICE);
+                                (ActivityManager) context.getSystemService(Context.ACTIVITY_SERVICE);
                         if (!am.isPackageInForeground(packageName)) {
                             PackageManager pm = context.getPackageManager();
                             Drawable icon = null;

@@ -202,17 +202,7 @@ public class RecentsActivity extends Activity implements RecentsView.RecentsView
 
     /** Updates the recents icon if there are tasks to clear */
     public void setRecentHints(boolean showClearRecents) {
-        NavigationBarView mNavigationBarView = ((SystemUIApplication) getApplication())
-                .getComponent(PhoneStatusBar.class).getNavigationBarView();
-        if (mNavigationBarView == null) return;
-
-        int navigationHints = mNavigationBarView.getNavigationIconHints();
-        if (showClearRecents) {
-            navigationHints |= StatusBarManager.NAVIGATION_HINT_RECENT_ALT;
-        } else {
-            navigationHints &= ~StatusBarManager.NAVIGATION_HINT_RECENT_ALT;
-        }
-        mNavigationBarView.setNavigationIconHints(navigationHints, true);
+	    return;
     }
 
     /** Updates the set of recent tasks */
@@ -554,7 +544,6 @@ public class RecentsActivity extends Activity implements RecentsView.RecentsView
 
         // Animate the SystemUI scrim views
         mScrimViews.startEnterRecentsAnimation();
-        mRecentsView.startFABanimation();
     }
 
     /**
@@ -639,8 +628,6 @@ public class RecentsActivity extends Activity implements RecentsView.RecentsView
 
         // Dismiss Recents to the focused Task or Home
         dismissRecentsToFocusedTaskOrHome(true);
-
-        mRecentsView.endFABanimation();
     }
 
     /** Called when debug mode is triggered */
@@ -722,25 +709,21 @@ public class RecentsActivity extends Activity implements RecentsView.RecentsView
     public void onExitToHomeAnimationTriggered() {
         // Animate the SystemUI scrim views out
         mScrimViews.startExitRecentsAnimation();
-        mRecentsView.endFABanimation();
     }
 
     @Override
     public void onTaskViewClicked() {
-        mRecentsView.endFABanimation();
     }
 
     @Override
     public void onTaskLaunchFailed() {
         // Return to Home
         dismissRecentsToHomeRaw(true);
-        mRecentsView.endFABanimation();
     }
 
     @Override
     public void onAllTaskViewsDismissed() {
         mFinishLaunchHomeRunnable.run();
-        mRecentsView.endFABanimation();
     }
 
     @Override

@@ -3188,6 +3188,16 @@ public final class Settings {
         public static final Validator VIBRATE_WHEN_RINGING_VALIDATOR = sBooleanValidator;
 
         /**
+         * Whether the incoming call should be shown as intrusive fullscreen pop-up.
+         * The value is boolean (1 or 0).
+         *    0 - Non-intrusive
+         *    1 - Fullscreen
+         *
+         * @hide
+         */
+        public static final String USE_INTRUSIVE_CALL = "use_intrusive_call";
+
+        /**
          * Whether the audible DTMF tones are played by the dialer when dialing. The value is
          * boolean (1 or 0).
          */
@@ -3629,6 +3639,13 @@ public final class Settings {
         public static final String VOICE_LAUNCH_INTENT = "voice_launch_intent";
 
         /**
+	 *
+         * Navbar Recents Switch
+         * @hide
+         */
+        public static final String NAVBAR_RECENTS_SWITCH = "navbar_recents_switch";
+
+        /**
          * Whether navigation bar is placed on the left side in landscape mode
          * @hide
          */
@@ -3665,13 +3682,32 @@ public final class Settings {
 
 	public static final String STATUS_BAR_RR_LOGO_COLOR = "status_bar_rr_logo_color";
 
-  /**
+  	/**
          * Style of Status bar logo
          * 0 - Left (default)
          * 1 - Right
          * @hide
          */
         public static final String STATUS_BAR_RR_LOGO_STYLE = "status_bar_rr_logo_style";
+
+        /**
+         * Statusbar Custom logos
+         * @hide
+         */
+        public static final String SHOW_CUSTOM_LOGO = "show_custom_logo";
+
+	/**
+         * Statusbar Custom logos Color
+         * @hide
+         */
+
+	public static final String CUSTOM_LOGO_COLOR = "custom_logo_color";
+
+ 	 /**
+         * Take your Pick 
+         * @hide
+         */
+        public static final String CUSTOM_LOGO_STYLE = "custom_logo_style";
 
 	/**
          * show clear all recents button
@@ -3684,6 +3720,66 @@ public final class Settings {
          * @hide
          */
         public static final String RECENTS_CLEAR_ALL_LOCATION = "recents_clear_all_location";
+
+        /**
+         * Recents Clear All Button Style
+         * @hide
+         */
+        public static final String CLEAR_RECENTS_STYLE = "clear_recents_style";
+
+       /**
+         * Recents Clear All Button Style Switch
+         * @hide
+         */
+        public static final String CLEAR_RECENTS_STYLE_ENABLE = "clear_recents_style_enable";
+
+       /**
+         * Recents Clear All Button Color
+         * @hide
+         */
+        public static final String FAB_BUTTON_COLOR= "fab_button_color";
+
+       /**
+         * Recents MemBar Color
+         * @hide
+         */
+        public static final String MEM_BAR_COLOR= "mem_bar_color";
+
+       /**
+         * Recents MemBar Text Color
+         * @hide
+         */
+        public static final String MEM_TEXT_COLOR= "mem_text_color";
+
+       /**
+         * Recents Clear Button Color
+         * @hide
+         */
+        public static final String CLEAR_BUTTON_COLOR= "clear_button_color";
+
+       /**
+         * Recents Date Text Color
+         * @hide
+         */
+        public static final String RECENTS_DATE_COLOR= "recents_date_color";
+
+       /**
+         * Recents Clock Text Color
+         * @hide
+         */
+        public static final String RECENTS_CLOCK_COLOR= "recents_clock_color";
+
+       /**
+         * Recents FAB animation
+         * @hide
+         */
+        public static final String RECENTS_ROTATE_FAB= "recents_rotate_fab";
+
+       /**
+         * Recents FAB animation style
+         * @hide
+         */
+        public static final String FAB_ANIMATION_STYLE= "fab_animation_style";
 
         /**
          * Whether to show or hide search bar in recents view
@@ -3904,47 +4000,7 @@ public final class Settings {
          * @hide
          */
         public static final String NETWORK_TRAFFIC_HIDEARROW = "network_traffic_hidearrow";
-
-        /**
-
-         *  Enable navigation bar double tap gesture on to put device to sleep
-         * @hide
-         */
-        public static final String DOUBLE_TAP_SLEEP_NAVBAR = "double_tap_sleep_navbar";
-
-        /**
-         * Whether to display the trigger region or not
-         *
-         * Whether to dim the navigation bar icons after inactivity
-         * @hide
-         */
-        public static final String DIM_NAV_BUTTONS = "dim_nav_buttons";
-
-        /**
-         * Time in milliseconds to wait before dimming the nav buttons
-         * @hide
-         */
-        public static final String DIM_NAV_BUTTONS_TIMEOUT = "dim_nav_buttons_timeout";
-
-        /**
-         * Alpha value percentage to dim the nav buttons to
-         * @hide
-         */
-        public static final String DIM_NAV_BUTTONS_ALPHA = "dim_nav_buttons_alpha";
-
-        /**
-         * Whether to animate the nav button dimming
-         * @hide
-         */
-        public static final String DIM_NAV_BUTTONS_ANIMATE = "dim_nav_buttons_animate";
-
-        /**
-         * Duration of the fade animation in milliseconds
-         * @hide
-         */
-        public static final String DIM_NAV_BUTTONS_ANIMATE_DURATION = "dim_nav_buttons_animate_duration";
-
-
+        
 	/**
          * Hide lockscreen date
          * @hide
@@ -3956,6 +4012,12 @@ public final class Settings {
          * @hide
          */
         public static final String HIDE_LOCKSCREEN_CLOCK = "hide_lockscreen_clock";
+
+        /**
+         * Hide lockscreen alarm
+         * @hide
+         */
+        public static final String HIDE_LOCKSCREEN_ALARM = "hide_lockscreen_alarm";
 
 
 	/**
@@ -4094,6 +4156,12 @@ public final class Settings {
         public static final String STATUSBAR_BATTERY_BAR = "statusbar_battery_bar";
 
         /**
+         * Status Bar Colors Switch
+         * @hide
+         */
+        public static final String STATUSBAR_COLOR_SWITCH = "statusbar_color_switch";
+
+        /**
          * @hide
          */
         public static final String STATUSBAR_BATTERY_BAR_COLOR = "statusbar_battery_bar_color";
@@ -4184,20 +4252,6 @@ public final class Settings {
          * @hide
          */
         public static final String DISABLE_FC_NOTIFICATIONS = "disable_fc_notifications";
-
-        /**
-         * Whether to enable status and navigation bar color in battery saver mode.
-         *
-         * @hide
-         */
-        public static final String BATTERY_SAVER_MODE_COLOR = "battery_save_mode_color";
- 	
- 	/**
-         * Navigation bar button color
-         * @hide
-         */
-        public static final String NAVIGATION_BAR_TINT = "navigation_bar_tint";
-
 
         /**
          * Status bar weather temperature
@@ -4333,15 +4387,6 @@ public final class Settings {
         public static final String ON_THE_GO_SERVICE_RESTART = "on_the_go_service_restart";
 
         /**
-         * Whether to use default custom header or poly hd
-         * 0 = default
-         * 1 = modern
-         * 2 = poly hd
-         * @hide
-         */
-        public static final String STATUS_BAR_CUSTOM_HEADER_DEFAULT = "status_bar_custom_header_default";
-
-        /**
          * Change fonts for the system lockscreen clock widget
          *
          * @hide
@@ -4421,6 +4466,18 @@ public final class Settings {
          */
         public static final String NOTIFICATION_ICON_COLOR = "notification_icon_color";
 
+        /**
+         * Color of Battery Icon
+         * @hide
+         */
+        public static final String BATTERY_ICON_COLOR = "battery_icon_color";
+
+        /**
+         * Color of Battery Text
+         * @hide
+         */
+        public static final String BATTERY_TEXT_COLOR = "battery_text_color";
+
 	/**
          * Settings for clock font size
          * @hide
@@ -4458,16 +4515,17 @@ public final class Settings {
         public static final String STATUS_BAR_DATE_FORMAT = "status_bar_date_format";
 
          /**
+         * Switch for clock color
+         * @hide
+         */
+        public static final String STATUSBAR_CLOCKCOLOR_SWITCH = "statusbar_clockcolor_switch";
+
+         /**
          * Setting for clock color
          * @hide
          */
         public static final String STATUSBAR_CLOCK_COLOR = "statusbar_clock_color";
 
-	/**
-         * Whether to display app circle sidebar
-         * @hide
-         */
-        public static final String ENABLE_APP_CIRCLE_BAR = "enable_app_circle_bar";
 
 
 	/**
@@ -4481,42 +4539,48 @@ public final class Settings {
          * @hide
          */
         public static final String SHOW_THREEG = "show_threeg";
-
+        
         /**
+         * Whether to display app circle sidebar
+         * @hide
+         */
+        public static final String ENABLE_APP_CIRCLE_BAR = "enable_app_circle_bar";
+        
+         /**
          * A list of packages to include in app circle bar.
          * This should be a string of packages separated by |			
          * @hide
          */
         public static final String WHITELIST_APP_CIRCLE_BAR = "whitelist_app_circle_bar";
 
-
-        /**
-         * Width of the app circle bar trigger
-         *
-         * @hide
-         */
-        public static final String APP_CIRCLE_BAR_TRIGGER_WIDTH = "app_circle_bar_trigger_width";
-
-        /**
-         * Position of app circle bar trigger
-         *
-         * @hide
-         */
-        public static final String APP_CIRCLE_BAR_TRIGGER_TOP = "app_circle_bar_trigger_top";
-
-        /**
-         * Height of the app circle bar trigger
-         *
-         * @hide
-         */
-        public static final String APP_CIRCLE_BAR_TRIGGER_HEIGHT = "app_circle_bar_trigger_height";
-
-        /**
-         * Whether to display the trigger region or not
-         *
-         * @hide
-         */
-        public static final String APP_CIRCLE_BAR_SHOW_TRIGGER = "app_circle_bar_show_trigger";
+ 
+         /**
+          * Width of the app circle bar trigger
+          *
+          * @hide
+          */
+         public static final String APP_CIRCLE_BAR_TRIGGER_WIDTH = "app_circle_bar_trigger_width";
+ 
+         /**
+          * Position of app circle bar trigger
+          *
+          * @hide
+          */
+         public static final String APP_CIRCLE_BAR_TRIGGER_TOP = "app_circle_bar_trigger_top";
+ 
+         /**
+          * Height of the app circle bar trigger
+          *
+          * @hide
+          */
+         public static final String APP_CIRCLE_BAR_TRIGGER_HEIGHT = "app_circle_bar_trigger_height";
+ 
+         /**
+          * Whether to display the trigger region or not
+          *
+          * @hide
+          */
+         public static final String APP_CIRCLE_BAR_SHOW_TRIGGER = "app_circle_bar_show_trigger";
 
 
         /**
@@ -4532,6 +4596,12 @@ public final class Settings {
          * @hide
          */
         public static final String LOCKSCREEN_BLUR_RADIUS = "lockscreen_blur_radius";
+                      
+        /**
+         * Double Tap to Sleep Navbar
+         * @hide
+         */
+        public static final String DOUBLE_TAP_SLEEP_NAVBAR = "double_tap_sleep_navbar";
 
         /**
          * Enable HW keys
@@ -4539,42 +4609,12 @@ public final class Settings {
          */
         public static final String ENABLE_HW_KEYS = "enable_hw_keys";
 
-	/** Wheither navigation bar is enabled or not
-	 * @hide
-	 */
-	public static final String NAVIGATION_BAR_SHOW = "navigation_bar_show";
-
-	/** Navbar height
-         * @hide
-         */
-	public static final String NAVIGATION_BAR_HEIGHT = "navigation_bar_height";
-
-	/** Navbar height in landscape
-         * @hide
-         */
-	public static final String NAVIGATION_BAR_HEIGHT_LANDSCAPE = "navigation_bar_height_landscape";
-
-	/** Navbar width
-         * @hide
-         */
-	public static final String NAVIGATION_BAR_WIDTH = "navigation_bar_width";
-
  	/**
          * Three Finger Gesture from Oppo
          *
          * @hide
          */
         public static final String THREE_FINGER_GESTURE = "three_finger_gesture";
-
-
-       /**
-        * MediaScanner behavior on boot.
-        * 0 = enabled
-        * 1 = ask (notification)
-        * 2 = disabled
-        * @hide
-        */
-        public static final String MEDIA_SCANNER_ON_BOOT = "media_scanner_on_boot";
 
         /**
          * Boolean value whether to link ringtone and notification volume
@@ -4612,175 +4652,6 @@ public final class Settings {
 	 * @hide
 	 */
 	public static final String WAKELOCK_BLOCKING_LIST = "wakelock_blocking_list";
-
-        /**
-         * Config for advanced pa pie 2.0
-         *
-         * @hide
-         */
-        public static final String PA_PIE_CONFIG = "pa_pie_config";
-
-       /**
-        * PA Pie control panel. Meet him on the spot.
-        * 0 = off
-        * 1 = on
-        * Changes aspect depends on status bar visibility.
-        * @hide
-        */
-        public static final String PA_PIE_STATE = "pa_pie_state";
-
-        /**
-         * Pie size fraction, default is 1.0f (normal)
-         * @hide
-         */
-        public static final String PA_PIE_SIZE = "pa_pie_size";
-
-        /**
-         * Locations of the Pa Pie in the screen.
-         * (1<<0) = LEFT
-         * (1<<1) = BOTTOM
-         * (1<<2) = RIGHT
-         * (1<<3) = TOP
-         * Default: LEFT
-         * @hide
-         */
-        public static final String PA_PIE_GRAVITY = "pa_pie_gravity";
-
-        /**
-         * Pie gap angle, should default to 2
-         * @hide
-         */
-        public static final String PA_PIE_GAP = "pa_pie_gap";
-
-        /**
-         * Pie empty angle, should default to 12
-         * @hide
-         */
-        public static final String PA_PIE_ANGLE = "pa_pie_angle";
-
-        /**
-         * Whether to use a separate delay for "slide to unlock" and security
-         * lock
-         * Pie status report
-         * 0 = Bare
-         * 1 = Quick
-         * 2 = Default
-         * 3 = Slow
-         * @hide
-         */
-        public static final String PA_PIE_MODE = "pa_pie_mode";
-
-        /**
-         * PA Pie menu, should default to 1 (yes, show)
-         * @hide
-         */
-        public static final String PA_PIE_MENU = "pa_pie_menu";
-
-        /**
-         * PA Pie last app, should default to 0 (no, show only when needed)
-         * @hide
-         */
-        public static final String PA_PIE_LAST_APP = "pa_pie_last_app";
-
-        /**
-         * PA Pie kill task, default to 0 (off)
-         * @hide
-         */
-        public static final String PA_PIE_KILL_TASK = "pa_pie_kill_task";
-
-        /**
-         * PA Pie action notifications, default to off
-         * @hide
-         */
-        public static final String PA_PIE_NOTIFICATIONS = "pa_pie_notifications";
-
-        /**
-         * Pie quick settings panel
-         * @hide
-         */
-        public static final String PA_PIE_SETTINGS_PANEL = "pa_pie_settings_panel";
-
-        /**
-         * PA Pie power, should default to 0 (no, show only when needed)
-         * @hide
-         */
-        public static final String PA_PIE_POWER = "pa_pie_power";
-
-        /**
-         * Pie screenshot
-         * @hide
-         */
-        public static final String PA_PIE_SCREENSHOT = "pa_pie_screenshot";
-
-        /**
-         * Pie toggles torch
-         * @hide
-         */
-        public static final String PA_PIE_TORCH = "pa_pie_torch";
-
-        /**
-         * Pie power menu
-         * @hide
-         */
-        public static final String PA_PIE_POWER_MENU = "pa_pie_power_menu";
-
-        /**
-         * Pie expanded desktop
-         * @hide
-         */
-        public static final String PA_PIE_EXPANDED_DESKTOP = "pa_pie_expanded_desktop";
-
-       // PIE COLORS EVERYWHERE! //
-
-        /**
-         * @hide
-         */
-        public static final String PA_PIE_ENABLE_COLOR = "pa_pie_enable_color";
-
-        /**
-         * @hide
-         */
-        public static final String PA_PIE_JUICE = "pa_pie_juice";
-
-        /**
-         * @hide
-         */
-        public static final String PA_PIE_BUTTON_COLOR = "pa_pie_button_color";
-
-        /**
-         * @hide
-         */
-        public static final String PA_PIE_SNAP_BACKGROUND = "pa_pie_snap_background";
-
-        /**
-         * @hide
-         */
-        public static final String PA_PIE_BACKGROUND = "pa_pie_background";
-
-        /**
-         * @hide
-         */
-        public static final String PA_PIE_SELECT = "pa_pie_select";
-
-        /**
-         * @hide
-         */
-        public static final String PA_PIE_OUTLINES = "pa_pie_outlines";
-
-        /**
-         * @hide
-         */
-        public static final String PA_PIE_STATUS_CLOCK = "pa_pie_status_clock";
-
-        /**
-         * @hide
-         */
-        public static final String PA_PIE_STATUS = "pa_pie_status";
-
-        /**
-         * @hide
-         */
-        public static final String PA_PIE_CHEVRON = "pa_pie_chevron";
 
         /**
          * Change the screenshot delay
@@ -4834,6 +4705,13 @@ public final class Settings {
         public static final String ANIMATION_IME_INTERPOLATOR = "animation_ime_interpolator";
 
         /**
+         *
+         * whether to enable or disable vibration on succesful fingerprint auth
+         * @hide
+         */
+        public static final String FINGERPRINT_SUCCESS_VIB = "fingerprint_success_vib";
+
+        /**
          * Change the color of the lockscreen indication text
          * @hide
          */
@@ -4845,6 +4723,27 @@ public final class Settings {
          * @hide
          */
         public static final String LOCKSCREEN_CLOCK_COLOR = "lockscreen_clock_color";
+
+        /**
+         * Change the color of the lockscreen owner's info text
+         *
+         * @hide
+         */
+        public static final String LOCKSCREEN_OWNER_INFO_COLOR = "lockscreen_owner_info_color";
+
+        /**
+         * Change the color of the lockscreen alarm text
+         *
+         * @hide
+         */
+        public static final String LOCKSCREEN_ALARM_COLOR = "lockscreen_alarm_color";
+
+  	/**
+	 *
+         * Whether to show switches for wifi/cell/bt in the settings dashboard
+         * @hide
+         */
+        public static final String DASHBOARD_SWITCHES = "dashboard_switches";
 
         /**
          * Change the color of the lockscreen date underneath the clock
@@ -5083,6 +4982,13 @@ public final class Settings {
          */
         public static final String QS_TRANSPARENT_SHADE = "qs_transparent_shade";
 
+        /**
+         * Whether to apply a shadow on top of the header image
+         * value is the alpha value of the shadow image is 0 -> no shadow -> 255 black
+         * @hide
+         */
+        public static final String STATUS_BAR_CUSTOM_HEADER_SHADOW = "status_bar_custom_header_shadow";
+
  	/**
          * Color of the clear all icon in the notification drawer
          * @hide
@@ -5100,6 +5006,116 @@ public final class Settings {
          * @hide
          */
         public static final String KEYGUARD_TOGGLE_TORCH = "keyguard_toggle_torch";
+
+
+	/**
+         * Color of the signal icons on the status bar
+         * @hide
+         */
+        public static final String STATUS_BAR_NETWORK_ICONS_SIGNAL_COLOR = "status_bar_network_icons_signal_color";
+
+        /**
+         * Color of the signal icons on the status bar, (dark mode)
+         * @hide
+         */
+        public static final String STATUS_BAR_NETWORK_ICONS_SIGNAL_COLOR_DARK_MODE = "status_bar_network_icons_signal_color_dark_mode";
+
+        /**
+         * Color of the no sim icon on the status bar
+         * @hide
+         */
+        public static final String STATUS_BAR_NETWORK_ICONS_NO_SIM_COLOR = "status_bar_network_icons_no_sim_color";
+
+        /**
+         * Color of the no sim icon on the status bar, (dark mode)
+         * @hide
+         */
+        public static final String STATUS_BAR_NETWORK_ICONS_NO_SIM_COLOR_DARK_MODE = "status_bar_network_icons_no_sim_color_dark_mode";
+
+        /**
+         * Color of the airplane mode icon on the status bar
+         * @hide
+         */
+        public static final String STATUS_BAR_NETWORK_ICONS_AIRPLANE_MODE_COLOR = "status_bar_network_icons_airplane_mode_color";
+
+        /**
+         * Color of the airplane mode icon on the status bar, (dark mode)
+         * @hide
+         */
+        public static final String STATUS_BAR_NETWORK_ICONS_AIRPLANE_MODE_COLOR_DARK_MODE = "status_bar_network_icons_airplane_mode_color_dark_mode";
+
+        /**
+         * Color of the status icons on the status bar
+         * @hide
+         */
+        public static final String STATUS_BAR_STATUS_ICONS_COLOR = "status_bar_status_icons_status_color";
+
+        /**
+         * Color of the status icons on the status bar, (dark mode)
+         * @hide
+         */
+        public static final String STATUS_BAR_STATUS_ICONS_COLOR_DARK_MODE = "status_bar_status_icons_status_color_color_dark_mode";
+
+        /**
+         * Color of the notification icons on the status bar
+         * @hide
+         */
+        public static final String STATUS_BAR_NOTIFICATION_ICONS_COLOR = "status_bar_notification_icons_color";
+
+        /**
+         * Color of the notification icons on the status bar, (dark mode)
+         * @hide
+         */
+        public static final String STATUS_BAR_NOTIFICATION_ICONS_COLOR_DARK_MODE = "status_bar_notification_icons_color_dark_mode";
+
+        /**
+         * Color of the weather text on the lock screen
+         * @hide
+         */
+        public static final String LOCK_SCREEN_WEATHER_TEXT_COLOR = "lock_screen_weather_text_color";
+
+        /**
+         * Color of the weather condition icons on the lock screen
+         * @hide
+         */
+        public static final String LOCK_SCREEN_WEATHER_ICON_COLOR = "lock_screen_weather_icon_color";
+
+  	 /**
+         * Color of the weather condition icons on the lock screen
+         * @hide
+         */
+        public static final String LOCK_SCREEN_WEATHER_TEMP_COLOR = "lock_screen_weather_temp_color";
+
+ 	 /**
+         * Color of the weather condition icons on the lock screen
+         * @hide
+         */
+        public static final String LOCK_SCREEN_WEATHER_CON_COLOR = "lock_screen_weather_con_color";
+
+  	 /**
+         * Color of the weather condition icons on the lock screen
+         * @hide
+         */
+        public static final String LOCK_SCREEN_WEATHER_STAMP_COLOR = "lock_screen_weather_stamp_color";
+
+  	 /**
+         * Color of the weather condition icons on the lock screen
+         * @hide
+         */
+        public static final String LOCK_SCREEN_WEATHER_HUM_COLOR = "lock_screen_weather_hum_color";
+
+  	 /**
+         * Color of the weather condition icons on the lock screen
+         * @hide
+         */
+        public static final String LOCK_SCREEN_WEATHER_CITY_COLOR = "lock_screen_weather_city_color";
+
+  	 /**
+         * Color of the weather condition icons on the lock screen
+         * @hide
+         */
+        public static final String LOCK_SCREEN_WEATHER_WIND_COLOR = "lock_screen_weather_wind_color";
+
 
         /**
          * Immersive recents options
@@ -5160,6 +5176,12 @@ public final class Settings {
         public static final String TRANSPARENT_POWER_DIALOG_DIM = "transparent_power_dialog_dim";
 
         /**
+         * Whether to display dashboard dividers
+         * @hide
+         */
+        public static final String DASHBOARD_TILEVIEW_DIVIDERS = "dashboard_tileview_dividers";
+
+        /**
          * Whether to display dashboard tiles in a double line layout
          * @hide
          */
@@ -5172,30 +5194,107 @@ public final class Settings {
         public static final String STATUS_BAR_HEADER_FONT_STYLE = "status_bar_header_font_style";
 
         /**
-         * Timeout for Heads Up
-         *
-         * @hide
-         */
-        public static final String HEADS_UP_TIMEOUT = "heads_up_timeout";
-
-        /**
-         * Snooze time for heads up
-         *
-         * @hide
-         */
-        public static final String HEADS_UP_SNOOZE_LENGTH_MS = "heads_up_snooze_length_ms";
-
-        /**
          * Add rotation to navbar buttons on navbar recreate (rotate screen, etc)
          * @hide
          */
         public static final String NAV_BUTTONS_ROTATION = "nav_buttons_rotation";
+
+        /** Whether to vibrate when quick settings tile is pressed.
+         *
+         * @hide
+         */
+        public static final String QUICK_SETTINGS_TILES_VIBRATE = "quick_settings_vibrate";
+
+        /** Whether to vibrate when quick settings tile is Single pressed.
+         *
+         * @hide
+         */
+        public static final String QUICK_SETTINGS_SP_VIBRATE = "quick_settings_sp_vibrate";
+
+        /** Whether to vibrate when Settings icon is pressed.
+         *
+         * @hide
+         */
+        public static final String QUICK_SETTINGS_ICON_VIBRATE = "quick_settings_icon_vibrate";
+
+        /** Whether to vibrate when Header Items are pressed.
+         *
+         * @hide
+         */
+        public static final String QUICK_SETTINGS_HEADER_VIBRATE = "quick_settings_header_vibrate";
+
+        /** Whether to vibrate when Header Items are Long pressed.
+         *
+         * @hide
+         */
+        public static final String QUICK_SETTINGS_HEADER_VIBRATE_LONG = "quick_settings_header_vibrate_long";
+
 
         /**
          * Quick Settings Smart Pulldown
          * @hide
          */
         public static final String QS_SMART_PULLDOWN = "qs_smart_pulldown";
+
+        /**
+         * Quick Settings Color Switch
+         * @hide
+         */
+        public static final String QS_COLOR_SWITCH = "qs_color_switch";
+
+        /**
+         * Quick Settings Header Text Color
+         * @hide
+         */
+        public static final String QS_HEADER_TEXT_COLOR = "qs_header_text_color";
+
+        /**
+         * Quick Settings Header Color
+         * @hide
+         */
+        public static final String QS_HEADER_COLOR = "qs_header_color";
+
+        /**
+         * Quick Settings Text Color
+         * @hide
+         */
+        public static final String QS_TEXT_COLOR = "qs_text_color";
+
+        /**
+         * Quick Settings Icon Color
+         * @hide
+         */
+        public static final String QS_ICON_COLOR = "qs_icon_color";
+
+        /**
+         * Quick Settings BG Color
+         * @hide
+         */
+        public static final String QS_BACKGROUND_COLOR = "qs_bg_color";
+
+        /**
+         * Quick Settings Brightness Icon Color
+         * @hide
+         */
+        public static final String QS_BRIGHTNESS_ICON_COLOR = "qs_brightness_icon_color";
+
+        /**
+         * header image package to use for daylight header - package name - null if default
+         * @hide
+         */
+        public static final String STATUS_BAR_DAYLIGHT_HEADER_PACK = "status_bar_daylight_header_pack";
+
+	/**
+         * What color to use for the battery LED while charging - really full (100%)
+         * @hide
+         */
+        public static final String BATTERY_LIGHT_REALLY_FULL_COLOR = "battery_light_really_full_color";
+
+        /**
+         * Define when Nfc polling is activated.
+         * @hide
+         */
+        public static final String NFC_POLLING_MODE = "nfc_polling";
 
         /**
          * Settings to backup. This is here so that it's in the same place as the settings
@@ -7556,6 +7655,12 @@ public final class Settings {
         public static final String DOZE_NOTIFICATION_INVERT_ENABLED = "doze_notification_invert_enabled";
 
         /**
+         * Add or remove software navigation bar
+         * @hide
+         */
+        public static final String NAVIGATION_BAR_VISIBLE = "navigation_bar_visible";
+        
+        /**
          * The current night mode that has been selected by the user.  Owned
          * and controlled by UiModeManagerService.  Constants are as per
          * UiModeManager.
@@ -7803,6 +7908,167 @@ public final class Settings {
          * @hide
          */
         public static final String STATUS_BAR_LOCKED_ON_SECURE_KEYGUARD = "status_bar_locked_on_secure_keyguard";
+
+        /**
+         * @hide
+         */
+        public static final String NAVIGATION_BAR_HEIGHT_LANDSCAPE = "navigation_bar_height_landscape";
+
+        /**
+         * @hide
+         */
+        public static final String NAVIGATION_BAR_HEIGHT = "navigation_bar_height";
+
+        /**
+         * @hide
+         */
+        public static final String NAVIGATION_BAR_WIDTH = "navigation_bar_width";
+
+        /**
+         * Navigation bar mode
+         *
+         * @hide
+         */
+        public static final String NAVIGATION_BAR_MODE = "navigation_bar_mode";
+
+        /**
+         * Fling actions
+         *
+         * @hide
+         */
+        public static final String FLING_GESTURE_ACTIONS = "fling_gesture_configs";
+
+        /**
+         * Fling logo visible
+         *
+         * @hide
+         */
+        public static final String FLING_LOGO_VISIBLE = "fling_logo_visible";
+
+        /**
+         * Fling logo animates
+         *
+         * @hide
+         */
+        public static final String FLING_LOGO_ANIMATES= "fling_logo_animates";
+
+        /**
+         * Fling logo animates
+         *
+         * @hide
+         */
+        public static final String FLING_LOGO_COLOR = "fling_logo_color";
+
+        /**
+         * Fling pulse music visualizer
+         *
+         * @hide
+         */
+        public static final String FLING_PULSE_ENABLED = "fling_pulse_enabled";
+
+        /**
+         * Fling pulse music visualizer color
+         *
+         * @hide
+         */
+        public static final String FLING_PULSE_COLOR = "fling_pulse_color";
+
+        /**
+         * Fling ripple effect
+         *
+         * @hide
+         */
+        public static final String FLING_RIPPLE_ENABLED = "fling_ripple_enabled";
+
+        /**
+         * Fling ripple color
+         *
+         * @hide
+         */
+        public static final String FLING_RIPPLE_COLOR = "fling_ripple_color";
+
+        /**
+         * Fling gesture trails on/off
+         *
+         * @hide
+         */
+        public static final String FLING_TRAILS_ENABLED = "fling_trails_enabled";
+
+        /**
+         * Fling gesture trails color
+         *
+         * @hide
+         */
+        public static final String FLING_TRAILS_COLOR = "fling_trails_color";
+
+        /**
+         * Fling pulse lavalamp psychedelic colors
+         *
+         * @hide
+         */
+        public static final String FLING_PULSE_LAVALAMP_ENABLED = "fling_pulse_lavalamp_enabled";
+
+        /**
+         * Fling pulse lavalamp animation speed
+         *
+         * @hide
+         */
+        public static final String FLING_PULSE_LAVALAMP_SPEED = "fling_pulse_lavalamp_speed";
+
+        /**
+         * time it takes to execute Fling long press action
+         *
+         * @hide
+         */
+        public static final String FLING_LONGPRESS_TIMEOUT = "fling_longpress_timeout";
+
+        /**
+         * distance to swipe right when device is in portrait orientation to
+         * trigger action
+         *
+         * @hide
+         */
+        public static final String FLING_LONGSWIPE_THRESHOLD_RIGHT_PORT = "fling_longswipe_threshold_right_port";
+
+        /**
+         * distance to swipe left when device is in portrait orientation to
+         * trigger action
+         *
+         * @hide
+         */
+        public static final String FLING_LONGSWIPE_THRESHOLD_LEFT_PORT = "fling_longswipe_threshold_left_port";
+
+        /**
+         * distance to swipe right when device is in landscape orientation to
+         * trigger action. Apples to a horizontal layout (tablet/phablet)
+         *
+         * @hide
+         */
+        public static final String FLING_LONGSWIPE_THRESHOLD_RIGHT_LAND = "fling_longswipe_threshold_right_land";
+
+        /**
+         * distance to swipe left when device is in landscape orientation to
+         * trigger action. Apples to a horizontal layout (tablet/phablet)
+         *
+         * @hide
+         */
+        public static final String FLING_LONGSWIPE_THRESHOLD_LEFT_LAND = "fling_longswipe_threshold_left_land";
+
+        /**
+         * distance to swipe up when device is in landscape orientation to
+         * trigger action. Apples to a vertical layout (phones)
+         *
+         * @hide
+         */
+        public static final String FLING_LONGSWIPE_THRESHOLD_UP_LAND = "fling_longswipe_threshold_up_land";
+
+        /**
+         * distance to swipe down when device is in landscape orientation to
+         * trigger action. Apples to a horizontal layout (phones)
+         *
+         * @hide
+         */
+        public static final String FLING_LONGSWIPE_THRESHOLD_DOWN_LAND = "fling_longswipe_threshold_down_land";
 
         /**
          * This are the settings to be backed up.

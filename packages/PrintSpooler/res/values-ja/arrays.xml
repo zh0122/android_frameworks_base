@@ -15,7 +15,7 @@
 -->
 <resources>
 
-    <string-array name="pdf_printer_media_sizes" translatable="false">
+    <string-array name="pdf_printer_media_sizes" >
         <item>JIS_B10</item>
         <item>JIS_B9</item>
         <item>JIS_B8</item>

@@ -234,7 +234,6 @@ public class LiveDisplayController {
         }
     }
 
-<<<<<<< HEAD
     private int[] stringArrayToIntArray(List<String> value) {
         int[] result = new int[value.size()];
         for (int i = 0; i < value.size(); i++) {
@@ -243,8 +242,6 @@ public class LiveDisplayController {
         return result;
     }
 
-=======
->>>>>>> ResurrectionRemix/marshmallow
     private final class SettingsObserver extends UserContentObserver {
         private final Uri DISPLAY_TEMPERATURE_DAY_URI =
                 CMSettings.System.getUriFor(CMSettings.System.DISPLAY_TEMPERATURE_DAY);
@@ -274,7 +271,6 @@ public class LiveDisplayController {
                 cr.registerContentObserver(DISPLAY_LOW_POWER_URI, false, this, UserHandle.USER_ALL);
                 cr.registerContentObserver(DISPLAY_COLOR_ENHANCE_URI, false, this, UserHandle.USER_ALL);
                 cr.registerContentObserver(DISPLAY_COLOR_ADJUSTMENT_URI, false, this, UserHandle.USER_ALL);
-<<<<<<< HEAD
                 if (mHardware.isSupported(CMHardwareManager.FEATURE_DISPLAY_GAMMA_CALIBRATION)) {
                     for (int i = 0; i < mHardware.getNumGammaControls(); i++) {
                         Uri gammaUri = CMSettings.Secure.getUriFor(
@@ -282,8 +278,6 @@ public class LiveDisplayController {
                         cr.registerContentObserver(gammaUri, false, this, UserHandle.USER_ALL);
                     }
                 }
-=======
->>>>>>> ResurrectionRemix/marshmallow
                 observe();
             } else {
                 cr.unregisterContentObserver(this);

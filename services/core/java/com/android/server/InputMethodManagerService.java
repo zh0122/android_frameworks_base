@@ -143,7 +143,6 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
 
-import cyanogenmod.hardware.CMHardwareManager;
 import cyanogenmod.providers.CMSettings;
 import cyanogenmod.hardware.CMHardwareManager;
 
@@ -242,7 +241,6 @@ public class InputMethodManagerService extends IInputMethodManager.Stub
     private boolean mShowOngoingImeSwitcherForPhones;
     private boolean mNotificationShown;
     private final boolean mImeSelectedOnBoot;
-    private CMHardwareManager mCMHardware;
 
     static class SessionState {
         final ClientState client;
@@ -510,32 +508,15 @@ public class InputMethodManagerService extends IInputMethodManager.Stub
                         }
                     }, userId);
 
-            if (mCMHardware.isSupported(CMHardwareManager.FEATURE_HIGH_TOUCH_SENSITIVITY)) {
-                resolver.registerContentObserver(CMSettings.System.getUriFor(
-                        CMSettings.System.HIGH_TOUCH_SENSITIVITY_ENABLE), false, this, userId);
-            }
-            if (mCMHardware.isSupported(CMHardwareManager.FEATURE_TOUCH_HOVERING)) {
-                resolver.registerContentObserver(CMSettings.Secure.getUriFor(
-                        CMSettings.Secure.FEATURE_TOUCH_HOVERING), false, this, userId);
-            }
-
             mRegistered = true;
         }
 
         @Override public void onChange(boolean selfChange, Uri uri) {
             final Uri showImeUri =
                     Settings.Secure.getUriFor(Settings.Secure.SHOW_IME_WITH_HARD_KEYBOARD);
-            final Uri touchSensitivityUri =
-                    CMSettings.System.getUriFor(CMSettings.System.HIGH_TOUCH_SENSITIVITY_ENABLE);
-            final Uri touchHoveringUri =
-                    CMSettings.Secure.getUriFor(CMSettings.Secure.FEATURE_TOUCH_HOVERING);
             synchronized (mMethodMap) {
                 if (showImeUri.equals(uri)) {
                     updateKeyboardFromSettingsLocked();
-                } else if (touchSensitivityUri.equals(uri)) {
-                    updateTouchSensitivity();
-                } else if (touchHoveringUri.equals(uri)) {
-                    updateTouchHovering();
                 } else {
                     boolean enabledChanged = false;
                     String newEnabled = mSettings.getEnabledInputMethodsStr();
@@ -1087,9 +1068,6 @@ public class InputMethodManagerService extends IInputMethodManager.Stub
                     mSettings.getEnabledInputMethodListLocked(), newUserId,
                     mContext.getBasePackageName());
         }
-        updateTouchHovering();
-        updateTouchSensitivity();
-
         updateTouchHovering();
         updateTouchSensitivity();
 
@@ -2020,26 +1998,6 @@ public class InputMethodManagerService extends IInputMethodManager.Stub
                 touchHovering);
     }
 
-
-    private void updateTouchSensitivity() {
-        if (!mCMHardware.isSupported(CMHardwareManager.FEATURE_HIGH_TOUCH_SENSITIVITY)) {
-            return;
-        }
-        boolean touchSensitivityEnable = CMSettings.System.getInt(mContext.getContentResolver(),
-                CMSettings.System.HIGH_TOUCH_SENSITIVITY_ENABLE, 0) == 1;
-        mCMHardware.set(CMHardwareManager.FEATURE_HIGH_TOUCH_SENSITIVITY,
-                touchSensitivityEnable);
-    }
-
-    private void updateTouchHovering() {
-        if (!mCMHardware.isSupported(CMHardwareManager.FEATURE_TOUCH_HOVERING)) {
-            return;
-        }
-        boolean touchHovering = CMSettings.Secure.getInt(mContext.getContentResolver(),
-                CMSettings.Secure.FEATURE_TOUCH_HOVERING, 0) == 1;
-        mCMHardware.set(CMHardwareManager.FEATURE_TOUCH_HOVERING,
-                touchHovering);
-    }
 
     public void updateKeyboardFromSettingsLocked() {
         mShowImeWithHardKeyboard = mSettings.isShowImeWithHardKeyboardEnabled();

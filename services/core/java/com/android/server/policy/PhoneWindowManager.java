@@ -1066,15 +1066,9 @@ public class PhoneWindowManager implements WindowManagerPolicy {
     private ImmersiveModeConfirmation mImmersiveModeConfirmation;
 
     private SystemGesturesPointerEventListener mSystemGestures;
-<<<<<<< HEAD
 
     private OPGesturesListener mOPGestures;
 
-=======
-
-    private OPGesturesListener mOPGestures;
-
->>>>>>> ResurrectionRemix/marshmallow
 
     IStatusBarService getStatusBarService() {
         synchronized (mServiceAquireLock) {
@@ -1782,6 +1776,7 @@ public class PhoneWindowManager implements WindowManagerPolicy {
 
 
         mSettingsObserver = new SettingsObserver(mHandler);
+        mSettingsObserver.observe();
         mShortcutManager = new ShortcutManager(context);
         mUiMode = context.getResources().getInteger(
                 com.android.internal.R.integer.config_defaultUiModeType);
@@ -2291,21 +2286,6 @@ public class PhoneWindowManager implements WindowManagerPolicy {
                 updateWakeGestureListenerLp();
             }
 
-<<<<<<< HEAD
-            final boolean useEdgeService = CMSettings.System.getIntForUser(resolver,
-                    CMSettings.System.USE_EDGE_SERVICE_FOR_GESTURES, 0, UserHandle.USER_CURRENT) == 1;
-
-            boolean devForceNavbar = CMSettings.Secure.getIntForUser(resolver,
-                    CMSettings.Secure.DEV_FORCE_SHOW_NAVBAR, 0, UserHandle.USER_CURRENT) == 1;
-            if (devForceNavbar != mDevForceNavbar) {
-                mDevForceNavbar = devForceNavbar;
-                if (mCMHardware.isSupported(CMHardwareManager.FEATURE_KEY_DISABLE)) {
-                    mCMHardware.set(CMHardwareManager.FEATURE_KEY_DISABLE, mDevForceNavbar);
-                }
-            }
-
-=======
->>>>>>> ResurrectionRemix/marshmallow
             mNavigationBarLeftInLandscape = CMSettings.System.getIntForUser(resolver,
                     CMSettings.System.NAVBAR_LEFT_IN_LANDSCAPE, 0, UserHandle.USER_CURRENT) == 1;
 
@@ -7295,14 +7275,6 @@ public class PhoneWindowManager implements WindowManagerPolicy {
         mKeyguardDelegate = new KeyguardServiceDelegate(mContext);
         mKeyguardDelegate.onSystemReady();
 
-<<<<<<< HEAD
-        mCMHardware = CMHardwareManager.getInstance(mContext);
-        // Ensure observe happens in systemReady() since we need
-        // CMHardwareService to be up and running
-        mSettingsObserver.observe();
-
-=======
->>>>>>> ResurrectionRemix/marshmallow
         readCameraLensCoverState();
         updateUiMode();
         boolean bindKeyguardNow;

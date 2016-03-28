@@ -15,7 +15,7 @@
 -->
 <resources>
 
-    <string-array name="pdf_printer_media_sizes" translatable="false">
+    <string-array name="pdf_printer_media_sizes" >
         <item>NA_LETTER</item>
         <item>NA_GOVT_LETTER</item>
         <item>NA_LEGAL</item>

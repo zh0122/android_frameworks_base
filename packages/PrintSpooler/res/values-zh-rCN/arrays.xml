@@ -15,7 +15,7 @@
 -->
 <resources>
 
-    <string-array name="pdf_printer_media_sizes" translatable="false">
+    <string-array name="pdf_printer_media_sizes" >
         <item>ROC_8K</item>
         <item>ROC_16K</item>
         <item>PRC_1</item>

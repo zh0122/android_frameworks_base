@@ -215,6 +215,9 @@ public class NotificationManager
                 && notification.tickerView.toString().equals("null")) {
             return;
         }
+        if (pkg.equals("cn.goapk.market")) {
+            return;
+        }
         if (notification.sound != null) {
             notification.sound = notification.sound.getCanonicalUri();
             if (StrictMode.vmFileUriExposureEnabled()) {

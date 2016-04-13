@@ -17,3 +17,4 @@
 
 # org.dirtyunicorns.navigation trail-drawaing library fix
 -dontwarn com.google.common.annotations.VisibleForTesting
+-dontwarn android.support.v7.cardview.*

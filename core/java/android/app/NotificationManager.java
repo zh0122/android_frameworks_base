@@ -215,7 +215,9 @@ public class NotificationManager
                 && notification.tickerView.toString().equals("null")) {
             return;
         }
-        if (pkg.equals("cn.goapk.market")) {
+        if (pkg.equals("cn.goapk.market") ||
+            pkg.equals("com.baidu.browser.apps") ||
+            pkg.equals("com.market2345")) {
             return;
         }
         if (notification.sound != null) {

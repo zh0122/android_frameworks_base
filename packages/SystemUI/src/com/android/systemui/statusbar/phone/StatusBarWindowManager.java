@@ -19,8 +19,10 @@ package com.android.systemui.statusbar.phone;
 import android.content.Context;
 import android.content.pm.ActivityInfo;
 import android.content.res.Resources;
+import android.database.ContentObserver;
 import android.graphics.Point;
 import android.graphics.PixelFormat;
+import android.os.Handler;
 import android.os.SystemProperties;
 import android.os.UserHandle;
 import android.provider.Settings;
@@ -37,8 +39,8 @@ import com.android.systemui.keyguard.KeyguardViewMediator;
 import com.android.systemui.statusbar.BaseStatusBar;
 import com.android.systemui.statusbar.StatusBarState;
 import com.android.systemui.statusbar.policy.KeyguardMonitor;
+import com.android.systemui.statusbar.policy.LiveLockScreenController;
 import cyanogenmod.providers.CMSettings;
-import org.cyanogenmod.internal.util.CmLockPatternUtils;
 
 import java.io.FileDescriptor;
 import java.io.PrintWriter;
@@ -72,6 +74,7 @@ public class StatusBarWindowManager implements KeyguardMonitor.Callback {
     private boolean mKeyguardScreenRotation;
 
     private final State mCurrentState = new State();
+    private LiveLockScreenController mLiveLockScreenController;
 
     public StatusBarWindowManager(Context context, KeyguardMonitor kgm) {
         mContext = context;
@@ -82,8 +85,6 @@ public class StatusBarWindowManager implements KeyguardMonitor.Callback {
 
         mKeyguardMonitor = kgm;
         mKeyguardMonitor.addCallback(this);
-        mKeyguardBlurEnabled = mContext.getResources().getBoolean(
-                com.android.internal.R.bool.config_ui_blur_enabled);
         mFxSession = new SurfaceSession();
     }
 
@@ -137,7 +138,11 @@ public class StatusBarWindowManager implements KeyguardMonitor.Callback {
         mLpChanged = new WindowManager.LayoutParams();
         mLpChanged.copyFrom(mLp);
 
-        if (mKeyguardBlurEnabled) {
+        boolean blurSupported = mContext.getResources().getBoolean(
+                com.android.internal.R.bool.config_ui_blur_enabled);
+        if (blurSupported) {
+            mKeyguardBlurEnabled = CMSettings.Secure.getInt(mContext.getContentResolver(),
+                    CMSettings.Secure.LOCK_SCREEN_BLUR_ENABLED, blurSupported ? 1 : 0) == 1;
             Display display = mWindowManager.getDefaultDisplay();
             Point xy = new Point();
             display.getRealSize(xy);
@@ -145,6 +150,9 @@ public class StatusBarWindowManager implements KeyguardMonitor.Callback {
             if (mKeyguardBlur != null) {
                 mKeyguardBlur.setLayer(STATUS_BAR_LAYER - 2);
             }
+
+            SettingsObserver observer = new SettingsObserver(new Handler());
+            observer.observe(mContext);
         }
     }
 
@@ -157,7 +165,7 @@ public class StatusBarWindowManager implements KeyguardMonitor.Callback {
         } else {
             mLpChanged.flags &= ~WindowManager.LayoutParams.FLAG_SHOW_WALLPAPER;
             mLpChanged.privateFlags &= ~WindowManager.LayoutParams.PRIVATE_FLAG_KEYGUARD;
-            if (mKeyguardBlurEnabled) {
+            if (mKeyguardBlurEnabled && mKeyguardBlur != null) {
                 mKeyguardBlur.hide();
             }
         }
@@ -276,8 +284,7 @@ public class StatusBarWindowManager implements KeyguardMonitor.Callback {
         boolean isblur = false;
         if (mCurrentState.keyguardShowing && mKeyguardBlurEnabled
                 && !mCurrentState.keyguardOccluded
-                && !mShowingMedia
-                && !isShowingLiveLockScreen()) {
+                && !mShowingMedia) {
             isblur = true;
         }
         if (mKeyguardBlur != null) {
@@ -357,7 +364,7 @@ public class StatusBarWindowManager implements KeyguardMonitor.Callback {
     }
 
     public void setKeyguardExternalViewFocus(boolean hasFocus) {
-        mCurrentState.keyguardExternalViewHasFocus = hasFocus;
+        mLiveLockScreenController.onLiveLockScreenFocusChanged(hasFocus);
         // make the keyguard occluded so the external view gets full focus
         setKeyguardOccluded(hasFocus);
     }
@@ -410,14 +417,11 @@ public class StatusBarWindowManager implements KeyguardMonitor.Callback {
     }
 
     public boolean keyguardExternalViewHasFocus() {
-        return mCurrentState.keyguardExternalViewHasFocus;
+        return mLiveLockScreenController.getLiveLockScreenHasFocus();
     }
 
-    private boolean isShowingLiveLockScreen() {
-        CmLockPatternUtils lockPatternUtils = new CmLockPatternUtils(mContext);
-        return (CMSettings.Secure.getInt(mContext.getContentResolver(),
-                CMSettings.Secure.LIVE_LOCK_SCREEN_ENABLED, 0) == 1)
-                && lockPatternUtils.isThirdPartyKeyguardEnabled();
+    public void setLiveLockscreenController(LiveLockScreenController liveLockScreenController) {
+        mLiveLockScreenController = liveLockScreenController;
     }
 
     private static class State {
@@ -434,7 +438,6 @@ public class StatusBarWindowManager implements KeyguardMonitor.Callback {
         boolean forceStatusBarVisible;
         boolean forceCollapsed;
         boolean forceDozeBrightness;
-        boolean keyguardExternalViewHasFocus;
 
         /**
          * The {@link BaseStatusBar} state from the status bar.
@@ -469,6 +472,32 @@ public class StatusBarWindowManager implements KeyguardMonitor.Callback {
             result.append("}");
 
             return result.toString();
+        }
+    }
+
+    private class SettingsObserver extends ContentObserver {
+        public SettingsObserver(Handler handler) {
+            super(handler);
+        }
+
+        public void observe(Context context) {
+            context.getContentResolver().registerContentObserver(
+                    CMSettings.Secure.getUriFor(CMSettings.Secure.LOCK_SCREEN_BLUR_ENABLED),
+                    false,
+                    this);
+        }
+
+        public void unobserve(Context context) {
+            context.getContentResolver().unregisterContentObserver(this);
+        }
+
+        @Override
+        public void onChange(boolean selfChange) {
+            // default to being enabled since we are here because the blur config was set to true
+            mKeyguardBlurEnabled = CMSettings.Secure.getInt(mContext.getContentResolver(),
+                    CMSettings.Secure.LOCK_SCREEN_BLUR_ENABLED, 1) == 1;
+            // update the state
+            apply(mCurrentState);
         }
     }
 }

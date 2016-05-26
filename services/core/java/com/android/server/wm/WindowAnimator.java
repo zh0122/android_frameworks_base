@@ -30,6 +30,8 @@ import static com.android.server.wm.WindowManagerService.LayoutFields.SET_ORIENT
 import static com.android.server.wm.WindowManagerService.LayoutFields.SET_WALLPAPER_ACTION_PENDING;
 
 import android.content.Context;
+import android.database.ContentObserver;
+import android.os.Handler;
 import android.os.RemoteException;
 import android.provider.Settings;
 import android.util.Slog;
@@ -44,6 +46,8 @@ import android.view.animation.Animation;
 import android.view.Choreographer;
 
 import com.android.server.wm.WindowManagerService.LayoutFields;
+
+import cyanogenmod.providers.CMSettings;
 
 import java.io.PrintWriter;
 import java.util.ArrayList;

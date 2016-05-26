@@ -93,6 +93,7 @@ import java.text.NumberFormat;
 
 import cyanogenmod.app.StatusBarPanelCustomTile;
 import cyanogenmod.providers.CMSettings;
+import cyanogenmod.weather.util.WeatherUtils;
 import org.cyanogenmod.internal.logging.CMMetricsLogger;
 
 /**
@@ -392,9 +393,13 @@ public class StatusBarHeaderView extends RelativeLayout implements View.OnClickL
         mClockCollapsedSize = getResources().getDimensionPixelSize(R.dimen.qs_time_collapsed_size);
         mClockExpandedSize = getResources().getDimensionPixelSize(R.dimen.qs_time_expanded_size);
         mClockCollapsedScaleFactor = (float) mClockCollapsedSize / (float) mClockExpandedSize;
+
+        if (mEditTileDoneText != null) {
+            mEditTileDoneText.setText(R.string.quick_settings_done);
+        }
+
         updateClockScale();
         updateClockCollapsedMargin();
-	     
     }
 
 
@@ -767,15 +772,14 @@ public class StatusBarHeaderView extends RelativeLayout implements View.OnClickL
     @Override
     public void onWeatherChanged(WeatherController.WeatherInfo info) {
         if (info.temp == null || info.condition == null) {
-			mWeatherimage = (ImageButton) findViewById(R.id.no_weather_image);
-			mWeatherimage.setVisibility(View.VISIBLE);
+            mWeatherimage = (ImageButton) findViewById(R.id.no_weather_image);
+            mWeatherimage.setVisibility(View.VISIBLE);
             mWeatherLine1.setText(null);
             mWeatherLine2.setText(null);
         } else {
             mWeatherimage.setVisibility(View.GONE);
             mWeatherLine1.setText(mContext.getString(
                     R.string.status_bar_expanded_header_weather_format,
-                    info.temp,
                     info.condition));
             mWeatherLine2.setText(info.city);
         }

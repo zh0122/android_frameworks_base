@@ -35,5 +35,6 @@ public interface WeatherController {
         public String temp = null;
         public String humidity = null;
         public String condition = null;
+        public int tempUnit;
     }
 }

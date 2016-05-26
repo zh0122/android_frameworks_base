@@ -391,7 +391,7 @@ public class PhoneStatusBar extends BaseStatusBar implements DemoMode,
 
     StatusBarWindowView mStatusBarWindow;
     FrameLayout mStatusBarWindowContent;
-    PhoneStatusBarView mStatusBarView;
+    private PhoneStatusBarView mStatusBarView;
     private int mStatusBarWindowState = WINDOW_STATE_SHOWING;
     private StatusBarWindowManager mStatusBarWindowManager;
     private UnlockMethodCache mUnlockMethodCache;
@@ -1080,7 +1080,42 @@ public class PhoneStatusBar extends BaseStatusBar implements DemoMode,
 
         }
     }
-	
+
+    public void setStatusBarViewVisibility(boolean visible) {
+        mStatusBarView.setVisibility(visible ? View.VISIBLE : View.INVISIBLE);
+    }
+
+    class DevForceNavbarObserver extends UserContentObserver {
+        DevForceNavbarObserver(Handler handler) {
+            super(handler);
+        }
+
+        @Override
+        protected void observe() {
+            super.observe();
+            ContentResolver resolver = mContext.getContentResolver();
+            resolver.registerContentObserver(CMSettings.Global.getUriFor(
+                    CMSettings.Global.DEV_FORCE_SHOW_NAVBAR), false, this, UserHandle.USER_ALL);
+        }
+
+        @Override
+        public void update() {
+            boolean visible = CMSettings.Global.getIntForUser(mContext.getContentResolver(),
+                    CMSettings.Global.DEV_FORCE_SHOW_NAVBAR, 0, UserHandle.USER_CURRENT) == 1;
+
+            if (visible) {
+                forceAddNavigationBar();
+            } else {
+                removeNavigationBar();
+            }
+
+            // Send a broadcast to Settings to update Key disabling when user changes
+            Intent intent = new Intent("com.cyanogenmod.action.UserChanged");
+            intent.setPackage("com.android.settings");
+            mContext.sendBroadcastAsUser(intent, new UserHandle(UserHandle.USER_CURRENT));
+        }
+    }
+
     private void updateWeatherTextState(String temp, int color, int size, int font) {
         if (mWeatherTempState == 0 || TextUtils.isEmpty(temp)) {
             mWeatherTempView.setVisibility(View.GONE);
@@ -1443,6 +1478,10 @@ public class PhoneStatusBar extends BaseStatusBar implements DemoMode,
     private RankingMap mLatestRankingMap;
     private boolean mNoAnimationOnNextBarModeChange;
 
+    public ScrimController getScrimController() {
+        return mScrimController;
+    }
+
     @Override
     public void start() {
         mDisplay = ((WindowManager)mContext.getSystemService(Context.WINDOW_SERVICE))
@@ -1574,6 +1613,9 @@ public class PhoneStatusBar extends BaseStatusBar implements DemoMode,
         mLiveLockScreenController = new LiveLockScreenController(mContext, this,
                 mNotificationPanel);
         mNotificationPanel.setLiveController(mLiveLockScreenController);
+        if (mStatusBarWindowManager != null) {
+            mStatusBarWindowManager.setLiveLockscreenController(mLiveLockScreenController);
+        }
 
         if (mHeadsUpManager == null) {
             mHeadsUpManager = new HeadsUpManager(context, mStatusBarWindow);
@@ -2332,7 +2374,7 @@ public class PhoneStatusBar extends BaseStatusBar implements DemoMode,
                         @Override
                         public void run() {
                             boolean isUpdate = mQSPanel.getHost().getCustomTileData()
-                                    .get(sbc.getKey()) != null;
+                                    .get(sbc.persistableKey()) != null;
                             if (isUpdate) {
                                 mQSPanel.getHost().updateCustomTile(sbc);
                             } else {
@@ -2348,7 +2390,7 @@ public class PhoneStatusBar extends BaseStatusBar implements DemoMode,
                     mHandler.post(new Runnable() {
                         @Override
                         public void run() {
-                            mQSPanel.getHost().removeCustomTileSysUi(sbc.getKey());
+                            mQSPanel.getHost().removeCustomTileSysUi(sbc.persistableKey());
                         }
                     });
                 }
@@ -3862,7 +3904,7 @@ public class PhoneStatusBar extends BaseStatusBar implements DemoMode,
                 setInteracting(StatusBarManager.WINDOW_STATUS_BAR, true);
             }
         }
-        if (mBrightnessChanged && upOrCancel) {
+        if (mBrightnessChanged && upOrCancel && !isQsExpanded()) {
             mBrightnessChanged = false;
             if (mJustPeeked && mExpandedVisible) {
                 mNotificationPanel.fling(10, false);
@@ -4378,6 +4420,9 @@ public class PhoneStatusBar extends BaseStatusBar implements DemoMode,
         mStatusBarWindowManager = new StatusBarWindowManager(mContext, mKeyguardMonitor);
         mStatusBarWindowManager.setShowingMedia(mKeyguardShowingMedia);
         mStatusBarWindowManager.add(mStatusBarWindow, getStatusBarHeight());
+        if (mLiveLockScreenController != null) {
+            mStatusBarWindowManager.setLiveLockscreenController(mLiveLockScreenController);
+        }
     }
 
     // called by makeStatusbar and also by PhoneStatusBarView
@@ -4866,6 +4911,7 @@ public class PhoneStatusBar extends BaseStatusBar implements DemoMode,
             mLiveLockScreenController.cleanup();
         }
 
+        mKeyguardBottomArea.cleanup();
         mStatusBarWindow.removeContent(mStatusBarWindowContent);
         mStatusBarWindow.clearDisappearingChildren();
 
@@ -5437,6 +5483,13 @@ public class PhoneStatusBar extends BaseStatusBar implements DemoMode,
             getNavigationBarView().setKeyguardShowing(true);
         }
         mAssistManager.onLockscreenShown();
+        mKeyguardBottomArea.requestFocus();
+        try {
+            WindowManagerGlobal.getWindowManagerService()
+                    .setLiveLockscreenEdgeDetector(false);
+        } catch (RemoteException e){
+            e.printStackTrace();
+        }
         if (mLiveLockScreenController.isShowingLiveLockScreenView()) {
             mLiveLockScreenController.getLiveLockScreenView().onKeyguardShowing(
                     mStatusBarKeyguardViewManager.isScreenTurnedOn());
@@ -5775,7 +5828,8 @@ public class PhoneStatusBar extends BaseStatusBar implements DemoMode,
     }
 
     public void showBouncer() {
-        if (!mRecreating && mNotificationPanel.mCanDismissKeyguard) {
+        if (!mRecreating && mNotificationPanel.mCanDismissKeyguard
+                && (mState != StatusBarState.SHADE || mLiveLockScreenController.getLiveLockScreenHasFocus())) {
             mWaitingForKeyguardExit = mStatusBarKeyguardViewManager.isShowing();
             mStatusBarKeyguardViewManager.dismiss();
         }
@@ -5791,7 +5845,6 @@ public class PhoneStatusBar extends BaseStatusBar implements DemoMode,
     }
 
     protected void unfocusKeyguardExternalView() {
-        setBarState(StatusBarState.KEYGUARD);
         mStatusBarKeyguardViewManager.setKeyguardExternalViewFocus(false);
     }
 
@@ -5880,14 +5933,10 @@ public class PhoneStatusBar extends BaseStatusBar implements DemoMode,
     }
 
     public void onTrackingStopped(boolean expand) {
-        if (mState == StatusBarState.KEYGUARD || mState == StatusBarState.SHADE_LOCKED || mStatusBarWindowManager.keyguardExternalViewHasFocus()) {
-            if (!expand && (!mUnlockMethodCache.canSkipBouncer() ||
-                    mLiveLockScreenController.isShowingLiveLockScreenView())) {
+        if (mState == StatusBarState.KEYGUARD || mState == StatusBarState.SHADE_LOCKED) {
+            if (!expand && !mUnlockMethodCache.canSkipBouncer()) {
                 showBouncer();
             }
-        } else if (expand && mStatusBarWindowManager.keyguardExternalViewHasFocus()) {
-            mStatusBarKeyguardViewManager.setKeyguardExternalViewFocus(false);
-            setBarState(StatusBarState.KEYGUARD);
         }
     }
 
@@ -6581,5 +6630,9 @@ public class PhoneStatusBar extends BaseStatusBar implements DemoMode,
                 }
             }
         }
+    }
+
+    public boolean isAffordanceSwipeInProgress() {
+        return mNotificationPanel.isAffordanceSwipeInProgress();
     }
 }

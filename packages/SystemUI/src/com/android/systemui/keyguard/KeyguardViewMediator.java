@@ -54,6 +54,7 @@ import android.util.EventLog;
 import android.util.Log;
 import android.util.Slog;
 import android.view.IWindowManager;
+import android.view.View;
 import android.view.ViewGroup;
 import android.view.WindowManagerGlobal;
 import android.view.WindowManagerPolicy;
@@ -62,6 +63,7 @@ import android.view.animation.AnimationUtils;
 
 import com.android.systemui.cm.UserContentObserver;
 import com.android.systemui.qs.tiles.LockscreenToggleTile;
+import com.android.systemui.statusbar.StatusBarState;
 import cyanogenmod.app.Profile;
 import cyanogenmod.app.ProfileManager;
 
@@ -1295,9 +1297,27 @@ public class KeyguardViewMediator extends SystemUI {
     }
 
     public void showKeyguard() {
+        // This is to prevent left edge from interfering
+        // with affordances.
+        if (mStatusBar.isAffordanceSwipeInProgress()
+                || mStatusBar.getBarState() == StatusBarState.KEYGUARD) {
+            return;
+        }
+
+        // Disable edge detector once we're back on lockscreen
+        try {
+            WindowManagerGlobal.getWindowManagerService()
+                    .setLiveLockscreenEdgeDetector(false);
+        } catch (RemoteException e){
+            Log.e(TAG, e.getMessage());
+        }
+
         mHandler.post(new Runnable() {
             @Override
             public void run() {
+                // Hide status bar window to avoid flicker,
+                // slideNotificationPanelIn will make it visible later.
+                mStatusBar.getStatusBarWindow().setVisibility(View.INVISIBLE);
                 // Get the keyguard into the correct state by calling mStatusBar.showKeyguard()
                 mStatusBar.showKeyguard();
                 // Now have the notification panel slid back into view

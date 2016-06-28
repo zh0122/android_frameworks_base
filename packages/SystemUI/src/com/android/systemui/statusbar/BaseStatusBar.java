@@ -249,6 +249,8 @@ public abstract class BaseStatusBar extends SystemUI implements
     protected WindowManager mWindowManager;
     protected IWindowManager mWindowManagerService;
 
+    private NotificationManager mNoMan;
+
     protected abstract void refreshLayout(int layoutDirection);
 
     protected Display mDisplay;
@@ -503,9 +505,7 @@ public abstract class BaseStatusBar extends SystemUI implements
                     }
                 }
             } else if (BANNER_ACTION_CANCEL.equals(action) || BANNER_ACTION_SETUP.equals(action)) {
-                NotificationManager noMan = (NotificationManager)
-                        mContext.getSystemService(Context.NOTIFICATION_SERVICE);
-                noMan.cancel(R.id.notification_hidden);
+                mNoMan.cancel(R.id.notification_hidden);
 
                 Settings.Secure.putInt(mContext.getContentResolver(),
                         Settings.Secure.SHOW_NOTE_ABOUT_NOTIFICATION_HIDING, 0);
@@ -634,6 +634,9 @@ public abstract class BaseStatusBar extends SystemUI implements
     public void start() {
         mWindowManager = (WindowManager)mContext.getSystemService(Context.WINDOW_SERVICE);
         mWindowManagerService = WindowManagerGlobal.getWindowManagerService();
+
+        mNoMan = (NotificationManager) mContext.getSystemService(Context.NOTIFICATION_SERVICE);
+
         mDisplay = mWindowManager.getDefaultDisplay();
         mDevicePolicyManager = (DevicePolicyManager)mContext.getSystemService(
                 Context.DEVICE_POLICY_SERVICE);
@@ -800,9 +803,7 @@ public abstract class BaseStatusBar extends SystemUI implements
                             mContext.getString(R.string.hidden_notifications_setup),
                             setupIntent);
 
-            NotificationManager noMan =
-                    (NotificationManager) mContext.getSystemService(Context.NOTIFICATION_SERVICE);
-            noMan.notify(R.id.notification_hidden, note.build());
+            mNoMan.notify(R.id.notification_hidden, note.build());
         }
     }
 
@@ -1460,6 +1461,20 @@ public abstract class BaseStatusBar extends SystemUI implements
     }
 
     protected boolean inflateViews(Entry entry, ViewGroup parent) {
+        final StatusBarNotification sbn = entry.notification;
+        String themePackageName = mCurrentTheme != null
+                ? mCurrentTheme.getOverlayPkgNameForApp(sbn.getPackageName()) : null;
+        boolean inflated = inflateViews(entry, parent, true);
+        if (!inflated && themePackageName != null
+                && !ThemeConfig.SYSTEM_DEFAULT.equals(themePackageName)) {
+            Log.w(TAG, "Couldn't expand themed RemoteViews, trying unthemed for: " + sbn);
+            inflated = inflateViews(entry, mStackScroller, false);
+        }
+
+        return inflated;
+    }
+
+    protected boolean inflateViews(Entry entry, ViewGroup parent, boolean isThemeable) {
         PackageManager pmUser = getPackageManagerForUser(
                 entry.notification.getUser().getIdentifier());
 
@@ -1536,10 +1551,12 @@ public abstract class BaseStatusBar extends SystemUI implements
         View contentViewLocal = null;
         View bigContentViewLocal = null;
         View headsUpContentViewLocal = null;
-        String themePackageName = mCurrentTheme != null
-                ? mCurrentTheme.getOverlayPkgNameForApp(sbn.getPackageName()) : null;
-        String statusBarThemePackageName = mCurrentTheme != null
-                ? mCurrentTheme.getOverlayForStatusBar() : null;
+        String themePackageName = (isThemeable && mCurrentTheme != null)
+                ? mCurrentTheme.getOverlayPkgNameForApp(sbn.getPackageName())
+                : ThemeConfig.SYSTEM_DEFAULT;
+        String statusBarThemePackageName = (isThemeable && mCurrentTheme != null)
+                ? mCurrentTheme.getOverlayForStatusBar()
+                : ThemeConfig.SYSTEM_DEFAULT;
 
         try {
             contentViewLocal = contentView.apply(
@@ -1630,8 +1647,10 @@ public abstract class BaseStatusBar extends SystemUI implements
         }
 
         if (publicViewLocal == null) {
+            final Context layoutContext = isThemeable ? mContext
+                    : maybeGetThemedContext(mContext, ThemeConfig.SYSTEM_DEFAULT);
             // Add a basic notification template
-            publicViewLocal = LayoutInflater.from(mContext).inflate(
+            publicViewLocal = LayoutInflater.from(layoutContext).inflate(
                     R.layout.notification_public_default,
                     contentContainerPublic, false);
             publicViewLocal.setIsRootNamespace(true);
@@ -2070,12 +2089,18 @@ public abstract class BaseStatusBar extends SystemUI implements
     }
 
     private boolean shouldShowOnKeyguard(StatusBarNotification sbn) {
-        boolean keyguard = true;
-        try {
-            keyguard = mNoMan.getPackageKeyguard(sbn.getPackageName(), sbn.getUid());
-        } catch (RemoteException e) {
+        if (!mShowLockscreenNotifications || mNotificationData.isAmbient(sbn.getKey())) {
+            return false;
         }
-        return mShowLockscreenNotifications && !mNotificationData.isAmbient(sbn.getKey()) && keyguard;
+        final int showOnKeyguard = mNoMan.getShowNotificationForPackageOnKeyguard(
+                sbn.getPackageName(), sbn.getUid());
+        boolean isKeyguardAllowedForApp =
+                (showOnKeyguard & Notification.SHOW_ALL_NOTI_ON_KEYGUARD) != 0;
+        if (isKeyguardAllowedForApp && sbn.isOngoing()) {
+            isKeyguardAllowedForApp =
+                    (showOnKeyguard & Notification.SHOW_NO_ONGOING_NOTI_ON_KEYGUARD) == 0;
+        }
+        return isKeyguardAllowedForApp;
     }
 
     private void hideWeatherPanelIfNecessary(int visibleNotifications, int maxKeyguardNotifications) {
@@ -2562,9 +2587,11 @@ public abstract class BaseStatusBar extends SystemUI implements
 
     @ChaosLab(name="GestureAnywhere", classification=Classification.NEW_METHOD)
     protected void addGestureAnywhereView() {
+      if (mGestureAnywhereView == null) {
         mGestureAnywhereView = (GestureAnywhereView)View.inflate(
                 mContext, R.layout.gesture_anywhere_overlay, null);
         mWindowManager.addView(mGestureAnywhereView, getGestureAnywhereViewLayoutParams(Gravity.LEFT));
+        }
         mGestureAnywhereView.setStatusBar(this);
     }
 
@@ -2595,8 +2622,10 @@ public abstract class BaseStatusBar extends SystemUI implements
     }
 
     protected void addAppCircleSidebar() {
+	    if (mAppCircleSidebar == null) {
             mAppCircleSidebar = (AppCircleSidebar) View.inflate(mContext, R.layout.app_circle_sidebar, null);
             mWindowManager.addView(mAppCircleSidebar, getAppCircleSidebarLayoutParams());
+            }
     }
 
     protected void removeAppCircleSidebar() {
@@ -2625,5 +2654,178 @@ public abstract class BaseStatusBar extends SystemUI implements
         lp.setTitle("AppCircleSidebar");
 
         return lp;
+    }
+
+    Runnable mKillTask = new Runnable() {
+        public void run() {
+            final Intent intent = new Intent(Intent.ACTION_MAIN);
+            String defaultHomePackage = "com.android.launcher";
+            intent.addCategory(Intent.CATEGORY_HOME);
+            final ResolveInfo res = mContext.getPackageManager().resolveActivity(intent, 0);
+            if (res.activityInfo != null && !res.activityInfo.packageName.equals("android")) {
+                defaultHomePackage = res.activityInfo.packageName;
+            }
+            boolean targetKilled = false;
+            final ActivityManager am = (ActivityManager) mContext
+                    .getSystemService(Activity.ACTIVITY_SERVICE);
+            List<RunningAppProcessInfo> apps = am.getRunningAppProcesses();
+            for (RunningAppProcessInfo appInfo : apps) {
+                int uid = appInfo.uid;
+                // Make sure it's a foreground user application (not system,
+                // root, phone, etc.)
+                if (uid >= Process.FIRST_APPLICATION_UID && uid <= Process.LAST_APPLICATION_UID
+                        && appInfo.importance == RunningAppProcessInfo.IMPORTANCE_FOREGROUND) {
+                    if (appInfo.pkgList != null && (appInfo.pkgList.length > 0)) {
+                        for (String pkg : appInfo.pkgList) {
+                            if (!pkg.equals("com.android.systemui")
+                                    && !pkg.equals(defaultHomePackage)) {
+                                am.forceStopPackage(pkg);
+                                targetKilled = true;
+                                break;
+                            }
+                        }
+                    } else {
+                        Process.killProcess(appInfo.pid);
+                        targetKilled = true;
+                    }
+                }
+                if (targetKilled) {
+                    Toast.makeText(mContext,
+                        com.android.internal.R.string.app_killed_message, Toast.LENGTH_SHORT).show();
+                    break;
+                }
+            }
+        }
+    };
+
+    private void getLastApp() {
+        int lastAppId = 0;
+        int looper = 1;
+        String packageName;
+        final Intent intent = new Intent(Intent.ACTION_MAIN);
+        final ActivityManager am = (ActivityManager) mContext
+                .getSystemService(Activity.ACTIVITY_SERVICE);
+        String defaultHomePackage = "com.android.launcher";
+        intent.addCategory(Intent.CATEGORY_HOME);
+        final ResolveInfo res = mContext.getPackageManager().resolveActivity(intent, 0);
+        if (res.activityInfo != null && !res.activityInfo.packageName.equals("android")) {
+            defaultHomePackage = res.activityInfo.packageName;
+        }
+        List <ActivityManager.RunningTaskInfo> tasks = am.getRunningTasks(5);
+        // lets get enough tasks to find something to switch to
+        // Note, we'll only get as many as the system currently has - up to 5
+        while ((lastAppId == 0) && (looper < tasks.size())) {
+            packageName = tasks.get(looper).topActivity.getPackageName();
+            if (!packageName.equals(defaultHomePackage)
+                    && !packageName.equals("com.android.systemui")) {
+                lastAppId = tasks.get(looper).id;
+            }
+            looper++;
+        }
+        if (lastAppId != 0) {
+            am.moveTaskToFront(lastAppId, am.MOVE_TASK_NO_USER_ACTION);
+        }
+    }
+
+    final Runnable mScreenshotTimeout = new Runnable() {
+        @Override
+        public void run() {
+            synchronized (mScreenshotLock) {
+                if (mScreenshotConnection != null) {
+                    mContext.unbindService(mScreenshotConnection);
+                    mScreenshotConnection = null;
+                }
+            }
+        }
+    };
+
+    private final Object mScreenshotLock = new Object();
+    private ServiceConnection mScreenshotConnection = null;
+    private Handler mHDL = new Handler();
+
+    private void takeScreenshot() {
+        synchronized (mScreenshotLock) {
+            if (mScreenshotConnection != null) {
+                return;
+            }
+            ComponentName cn = new ComponentName("com.android.systemui",
+                    "com.android.systemui.screenshot.TakeScreenshotService");
+            Intent intent = new Intent();
+            intent.setComponent(cn);
+            ServiceConnection conn = new ServiceConnection() {
+                @Override
+                public void onServiceConnected(ComponentName name, IBinder service) {
+                    synchronized (mScreenshotLock) {
+                        if (mScreenshotConnection != this) {
+                            return;
+                        }
+                        Messenger messenger = new Messenger(service);
+                        Message msg = Message.obtain(null, 1);
+                        final ServiceConnection myConn = this;
+                        Handler h = new Handler(mHDL.getLooper()) {
+                            @Override
+                            public void handleMessage(Message msg) {
+                                synchronized (mScreenshotLock) {
+                                    if (mScreenshotConnection == myConn) {
+                                        mContext.unbindService(mScreenshotConnection);
+                                        mScreenshotConnection = null;
+                                        mHDL.removeCallbacks(mScreenshotTimeout);
+                                    }
+                                }
+                            }
+                        };
+                        msg.replyTo = new Messenger(h);
+                        msg.arg1 = msg.arg2 = 0;
+
+                        /*
+                         * remove for the time being if (mStatusBar != null &&
+                         * mStatusBar.isVisibleLw()) msg.arg1 = 1; if
+                         * (mNavigationBar != null &&
+                         * mNavigationBar.isVisibleLw()) msg.arg2 = 1;
+                         */
+
+                        /* wait for the dialog box to close */
+                        try {
+                            Thread.sleep(1000);
+                        } catch (InterruptedException ie) {
+                        }
+
+                        /* take the screenshot */
+                        try {
+                            messenger.send(msg);
+                        } catch (RemoteException e) {
+                        }
+                    }
+                }
+
+                @Override
+                public void onServiceDisconnected(ComponentName name) {
+                }
+            };
+            if (mContext.bindService(intent, conn, mContext.BIND_AUTO_CREATE)) {
+                mScreenshotConnection = conn;
+                mHDL.postDelayed(mScreenshotTimeout, 10000);
+            }
+        }
+    }
+
+    /**
+     * Returns a context with the given theme applied or the original context if we fail to get a
+     * themed context.
+     */
+    private Context maybeGetThemedContext(Context context, String themePkg) {
+        Context themedContext;
+        try {
+            ApplicationInfo ai = context.getPackageManager().getApplicationInfo(
+                    context.getPackageName(), 0);
+            themedContext = context.createApplicationContext(ai, themePkg,
+                    0);
+        } catch (PackageManager.NameNotFoundException e) {
+            themedContext = null;
+        }
+        if (themedContext == null) {
+            themedContext = context;
+        }
+        return themedContext;
     }
 }

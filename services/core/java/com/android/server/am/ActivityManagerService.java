@@ -2211,6 +2211,7 @@ public final class ActivityManagerService extends ActivityManagerNative
 
                 try {
                     Intent protectedAppIntent = new Intent();
+                    protectedAppIntent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TASK);
                     protectedAppIntent.setComponent(
                             new ComponentName("com.android.settings",
                                     "com.android.settings.applications.ProtectedAppsActivity"));
@@ -2243,6 +2244,8 @@ public final class ActivityManagerService extends ActivityManagerNative
                             .build();
                     try {
                         int[] outId = new int[1];
+                        inm.cancelNotificationWithTag("android", null,
+                                R.string.notify_package_component_protected_title, msg.arg1);
                         inm.enqueueNotificationWithTag("android", "android", null,
                                 R.string.notify_package_component_protected_title,
                                 notification, outId, mCurrentUserId);
@@ -3021,7 +3024,7 @@ public final class ActivityManagerService extends ActivityManagerNative
             if (!app.killed) {
                 Slog.wtfStack(TAG, "Removing process that hasn't been killed: " + app);
                 Process.killProcessQuiet(app.pid);
-                killProcessGroup(app.info.uid, app.pid);
+                killProcessGroup(app.uid, app.pid);
             }
             if (lrui <= mLruProcessActivityStart) {
                 mLruProcessActivityStart--;
@@ -3396,7 +3399,7 @@ public final class ActivityManagerService extends ActivityManagerNative
             // clean it up now.
             if (DEBUG_PROCESSES || DEBUG_CLEANUP) Slog.v(TAG_PROCESSES, "App died: " + app);
             checkTime(startTime, "startProcess: bad proc running, killing");
-            killProcessGroup(app.info.uid, app.pid);
+            killProcessGroup(app.uid, app.pid);
             handleAppDiedLocked(app, true, true);
             checkTime(startTime, "startProcess: done killing old proc");
         }
@@ -4946,7 +4949,7 @@ public final class ActivityManagerService extends ActivityManagerNative
             if (!fromBinderDied) {
                 Process.killProcessQuiet(pid);
             }
-            killProcessGroup(app.info.uid, pid);
+            killProcessGroup(app.uid, pid);
             app.killed = true;
         }
 
@@ -12577,6 +12580,7 @@ public final class ActivityManagerService extends ActivityManagerNative
         synchronized (sb) {
             bufferWasEmpty = sb.length() == 0;
             appendDropBoxProcessHeaders(process, processName, sb);
+            sb.append("CM Version: ").append(cyanogenmod.os.Build.CYANOGENMOD_VERSION).append("\n");
             sb.append("Build: ").append(Build.FINGERPRINT).append("\n");
             sb.append("System-App: ").append(isSystemApp).append("\n");
             sb.append("Uptime-Millis: ").append(info.violationUptimeMillis).append("\n");
@@ -12846,6 +12850,7 @@ public final class ActivityManagerService extends ActivityManagerNative
         if (subject != null) {
             sb.append("Subject: ").append(subject).append("\n");
         }
+        sb.append("CM Version: ").append(cyanogenmod.os.Build.CYANOGENMOD_VERSION).append("\n");
         sb.append("Build: ").append(Build.FINGERPRINT).append("\n");
         if (Debug.isDebuggerConnected()) {
             sb.append("Debugger: Connected\n");

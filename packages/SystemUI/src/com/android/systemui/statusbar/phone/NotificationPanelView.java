@@ -84,11 +84,14 @@ import com.android.systemui.statusbar.StatusBarState;
 import com.android.systemui.statusbar.policy.HeadsUpManager;
 import com.android.systemui.statusbar.policy.KeyguardUserSwitcher;
 import com.android.systemui.statusbar.policy.LiveLockScreenController;
+import com.android.systemui.statusbar.policy.WeatherController;
+import com.android.systemui.statusbar.policy.WeatherControllerImpl;
 import com.android.systemui.statusbar.stack.NotificationStackScrollLayout;
 import com.android.systemui.statusbar.stack.StackStateAnimator;
 import org.cyanogenmod.internal.util.CmLockPatternUtils;
 
 import cyanogenmod.providers.CMSettings;
+import cyanogenmod.weather.util.WeatherUtils;
 
 import java.util.List;
 
@@ -96,7 +99,7 @@ public class NotificationPanelView extends PanelView implements
         ExpandableView.OnHeightChangedListener, ObservableScrollView.Listener,
         View.OnClickListener, NotificationStackScrollLayout.OnOverscrollTopChangedListener,
         KeyguardAffordanceHelper.Callback, NotificationStackScrollLayout.OnEmptySpaceClickListener,
-        HeadsUpManager.OnHeadsUpChangedListener {
+        HeadsUpManager.OnHeadsUpChangedListener, WeatherController.Callback {
 
     private static final boolean DEBUG = false;
 
@@ -288,7 +291,11 @@ public class NotificationPanelView extends PanelView implements
     private final GestureDetector mGestureDetector;
     private ViewLinker mViewLinker;
     private final UnlockMethodCache mUnlockMethodCache;
+    private boolean mDetailScrollLock;
 
+    private boolean mKeyguardWeatherEnabled;
+    private TextView mKeyguardWeatherInfo;
+    private WeatherControllerImpl mWeatherController;
 
     private enum SwipeLockedDirection {
         UNKNOWN,
@@ -427,6 +434,11 @@ public class NotificationPanelView extends PanelView implements
         mLiveLockscreenController = liveController;
     }
 
+    public void setWeatherController(WeatherControllerImpl weatherController) {
+        mWeatherController = weatherController;
+        mWeatherController.addCallback(this);
+    }
+
     @Override
     protected void onFinishInflate() {
         super.onFinishInflate();
@@ -435,9 +447,9 @@ public class NotificationPanelView extends PanelView implements
         mKeyguardStatusBar = (KeyguardStatusBarView) findViewById(R.id.keyguard_header);
         mKeyguardStatusView = (KeyguardStatusView) findViewById(R.id.keyguard_status_view);
         mQsContainer = (QSContainer) findViewById(R.id.quick_settings_container);
-        mQsPanel = (QSDragPanel) findViewById(R.id.quick_settings_panel);
         mTaskManagerPanel = (LinearLayout) findViewById(R.id.task_manager_panel);
         mQsPanel = (QSDragPanel) findViewById(R.id.quick_settings_panel);
+        mQsPanel.setPanelView(this);
         mClockView = (TextView) findViewById(R.id.clock_view);
         mScrollView = (ObservableScrollView) findViewById(R.id.scroll_view);
         mScrollView.setFocusable(false);
@@ -537,6 +549,7 @@ public class NotificationPanelView extends PanelView implements
             setQSBackgroundColor();
             
        mLockPatternUtils = new CmLockPatternUtils(getContext());
+        mKeyguardWeatherInfo = (TextView) mKeyguardStatusView.findViewById(R.id.weather_info);
     }
 
     public boolean isAffordanceSwipeInProgress() {
@@ -554,6 +567,7 @@ public class NotificationPanelView extends PanelView implements
     protected void onDetachedFromWindow() {
         super.onDetachedFromWindow();
         mSettingsObserver.unobserve();
+        mWeatherController.removeCallback(this);
     }
 
     @Override
@@ -1129,7 +1143,7 @@ public class NotificationPanelView extends PanelView implements
         }
         if (mTwoFingerQsExpandPossible && isOpenQsEvent(event)
                 && event.getY(event.getActionIndex()) < mStatusBarMinHeight
-                && mExpandedHeight < mQsPeekHeight) {
+                && mExpandedHeight <= mQsPeekHeight) {
             MetricsLogger.count(mContext, COUNTER_PANEL_OPEN_QS, 1);
             mQsExpandImmediate = true;
             requestPanelHeightUpdate();
@@ -1281,8 +1295,13 @@ public class NotificationPanelView extends PanelView implements
                 mTrackingPointer = -1;
                 trackMovement(event);
                 float fraction = getQsExpansionFraction();
-                if ((fraction != 0f || y >= mInitialTouchY)
-                        && (fraction != 1f || y <= mInitialTouchY)) {
+                final boolean fling = (fraction != 0f || y >= mInitialTouchY)
+                        && (fraction != 1f || y <= mInitialTouchY);
+                final boolean flingExpand = Math.abs(getCurrentVelocity())
+                        > mFlingAnimationUtils.getMinVelocityPxPerSecond();
+                final boolean detailFling = mDetailScrollLock && mQsExpanded
+                        && flingExpand;
+                if ((fling && !mDetailScrollLock) || detailFling) {
                     flingQsWithCurrentVelocity(y,
                             event.getActionMasked() == MotionEvent.ACTION_CANCEL);
                 } else {
@@ -1386,7 +1405,9 @@ public class NotificationPanelView extends PanelView implements
         mStatusBarState = statusBarState;
         mKeyguardShowing = keyguardShowing;
         mKeyguardOrShadeShowing = keyguardOrShadeShowing;
-        mCanDismissKeyguard = keyguardShowing;
+        if (oldState != statusBarState && statusBarState == StatusBarState.KEYGUARD) {
+            mCanDismissKeyguard = true;
+        }
 
         if (goingToFullShade || (oldState == StatusBarState.KEYGUARD
                 && statusBarState == StatusBarState.SHADE_LOCKED)) {
@@ -1863,7 +1884,8 @@ public class NotificationPanelView extends PanelView implements
                 && y >= header.getTop() && y <= header.getBottom();
 
         if (mQsExpanded) {
-            return onHeader || (mScrollView.isScrolledToBottom() && yDiff < 0) && isInQsArea(x, y);
+            return onHeader || mDetailScrollLock
+                    || (mScrollView.isScrolledToBottom() && yDiff < 0) && isInQsArea(x, y);
         } else {
             return onHeader;
         }
@@ -1984,7 +2006,7 @@ public class NotificationPanelView extends PanelView implements
      */
     private int getTempQsMaxExpansion() {
         int qsTempMaxExpansion = mQsMaxExpansionHeight;
-        if (mScrollYOverride != -1) {
+        if (mScrollYOverride != -1 && !mDetailScrollLock) {
             qsTempMaxExpansion -= mScrollYOverride;
         }
         return qsTempMaxExpansion;
@@ -2838,12 +2860,6 @@ public class NotificationPanelView extends PanelView implements
                     Settings.System.QS_SMART_PULLDOWN),
                     false, this, UserHandle.USER_ALL);
             resolver.registerContentObserver(Settings.System.getUriFor(
-                    Settings.System.QS_COLOR_SWITCH),
-                    false, this, UserHandle.USER_ALL);
-            resolver.registerContentObserver(Settings.System.getUriFor(
-                    Settings.System.QS_BACKGROUND_COLOR),
-                    false, this, UserHandle.USER_ALL);
-            resolver.registerContentObserver(Settings.System.getUriFor(
                     Settings.System.QS_TRANSPARENT_SHADE),
                     false, this, UserHandle.USER_ALL);
             update();
@@ -2995,6 +3011,45 @@ public class NotificationPanelView extends PanelView implements
         ActivityManager am = getContext().getSystemService(ActivityManager.class);
         List<ActivityManager.RunningTaskInfo> tasks = am.getRunningTasks(1);
         return !tasks.isEmpty() && pkgName.equals(tasks.get(0).topActivity.getPackageName());
+    }
+
+    public void setDetailRequestedScrollLock(boolean detailScrollFlag) {
+        if (mDetailScrollLock != detailScrollFlag) {
+            if (mStatusBarState != StatusBarState.SHADE) {
+                mDetailScrollLock = false;
+            } else {
+                mDetailScrollLock = detailScrollFlag;
+            }
+            if (!detailScrollFlag && getQsExpansionFraction() > 0.3f) {
+                flingSettings(getCurrentVelocity(), true, new Runnable() {
+                    @Override
+                    public void run() {
+                        mStackScrollerOverscrolling = false;
+                        mQsExpansionFromOverscroll = false;
+                        updateQsState();
+                        updateHeader();
+                        updateMaxHeadsUpTranslation();
+                        updatePanelExpanded();
+                        requestLayout();
+                    }
+                }, false);
+            } else {
+                requestLayout();
+            }
+        }
+    }
+
+    @Override
+    public void onWeatherChanged(WeatherController.WeatherInfo info) {
+        if (!mKeyguardWeatherEnabled || Double.isNaN(info.temp) || info.condition == null) {
+            mKeyguardWeatherInfo.setVisibility(GONE);
+        } else {
+            mKeyguardWeatherInfo.setText(mContext.getString(
+                    R.string.keyguard_status_view_weather_format,
+                    WeatherUtils.formatTemperature(info.temp, info.tempUnit),
+                    info.condition));
+            mKeyguardWeatherInfo.setVisibility(VISIBLE);
+        }
     }
 
     private class SlideInAnimationListener implements ValueAnimator.AnimatorUpdateListener,

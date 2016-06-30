@@ -57,7 +57,6 @@ public class RankingHelper implements RankingConfig {
     private static final boolean DEFAULT_PEEKABLE = true;
     private static final int DEFAULT_VISIBILITY =
             NotificationListenerService.Ranking.VISIBILITY_NO_OVERRIDE;
-    private static final boolean DEFAULT_KEYGUARD = true;
 
     private final NotificationSignalExtractor[] mSignalExtractors;
     private final NotificationComparator mPreliminaryComparator = new NotificationComparator();
@@ -448,10 +447,6 @@ public class RankingHelper implements RankingConfig {
                 if (r.visibility != DEFAULT_VISIBILITY) {
                     pw.print(" visibility=");
                     pw.print(Notification.visibilityToString(r.visibility));
-                }
-                if (r.keyguard != DEFAULT_KEYGUARD) {
-                    pw.print(" keyguard=");
-                    pw.print(r.keyguard);
                 }
                 pw.println();
             }

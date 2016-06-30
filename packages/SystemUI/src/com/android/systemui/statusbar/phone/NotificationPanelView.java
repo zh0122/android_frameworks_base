@@ -34,6 +34,7 @@ import android.database.ContentObserver;
 import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.drawable.ColorDrawable;
+import android.graphics.drawable.GradientDrawable;
 import android.graphics.PorterDuff.Mode;
 import android.graphics.Paint;
 import android.graphics.Point;
@@ -73,7 +74,8 @@ import com.android.systemui.EventLogTags;
 import com.android.systemui.R;
 import com.android.systemui.SwipeHelper;
 import com.android.systemui.qs.QSContainer;
-import com.android.systemui.qs.QSDragPanel;
+import com.android.systemui.qs.QSDetailClipper;
+import com.android.systemui.qs.QSPanel;
 import com.android.systemui.statusbar.ExpandableNotificationRow;
 import com.android.systemui.statusbar.ExpandableView;
 import com.android.systemui.statusbar.FlingAnimationUtils;
@@ -84,14 +86,11 @@ import com.android.systemui.statusbar.StatusBarState;
 import com.android.systemui.statusbar.policy.HeadsUpManager;
 import com.android.systemui.statusbar.policy.KeyguardUserSwitcher;
 import com.android.systemui.statusbar.policy.LiveLockScreenController;
-import com.android.systemui.statusbar.policy.WeatherController;
-import com.android.systemui.statusbar.policy.WeatherControllerImpl;
 import com.android.systemui.statusbar.stack.NotificationStackScrollLayout;
 import com.android.systemui.statusbar.stack.StackStateAnimator;
 import org.cyanogenmod.internal.util.CmLockPatternUtils;
 
 import cyanogenmod.providers.CMSettings;
-import cyanogenmod.weather.util.WeatherUtils;
 
 import java.util.List;
 
@@ -99,7 +98,7 @@ public class NotificationPanelView extends PanelView implements
         ExpandableView.OnHeightChangedListener, ObservableScrollView.Listener,
         View.OnClickListener, NotificationStackScrollLayout.OnOverscrollTopChangedListener,
         KeyguardAffordanceHelper.Callback, NotificationStackScrollLayout.OnEmptySpaceClickListener,
-        HeadsUpManager.OnHeadsUpChangedListener, WeatherController.Callback {
+        HeadsUpManager.OnHeadsUpChangedListener {
 
     private static final boolean DEBUG = false;
 
@@ -131,7 +130,7 @@ public class NotificationPanelView extends PanelView implements
     private KeyguardUserSwitcher mKeyguardUserSwitcher;
     private KeyguardStatusBarView mKeyguardStatusBar;
     private QSContainer mQsContainer;
-    private QSDragPanel mQsPanel;
+    private QSPanel mQsPanel;
     private KeyguardStatusView mKeyguardStatusView;
     private ObservableScrollView mScrollView;
     private TextView mClockView;
@@ -241,6 +240,7 @@ public class NotificationPanelView extends PanelView implements
     private boolean mHeadsUpAnimatingAway;
     private boolean mLaunchingAffordance;
     private String mLastCameraLaunchSource = KeyguardBottomAreaView.CAMERA_LAUNCH_SOURCE_AFFORDANCE;
+    private QSDetailClipper mClipper;
 
     private Runnable mHeadsUpExistenceChangedRunnable = new Runnable() {
         @Override
@@ -273,6 +273,12 @@ public class NotificationPanelView extends PanelView implements
     private int mQSShadeAlpha;
 
     private int mQSBackgroundColor;
+    // QS stroke
+    private int mQSStroke;
+    private int mCustomStrokeColor;
+    private int mCustomStrokeThickness;
+    private int mCustomCornerRadius;
+
     // Used to identify whether showUnlock() can dismiss the keyguard
     // or not.
     // TODO - add a new state to make it easier to identify keyguard vs
@@ -291,11 +297,7 @@ public class NotificationPanelView extends PanelView implements
     private final GestureDetector mGestureDetector;
     private ViewLinker mViewLinker;
     private final UnlockMethodCache mUnlockMethodCache;
-    private boolean mDetailScrollLock;
 
-    private boolean mKeyguardWeatherEnabled;
-    private TextView mKeyguardWeatherInfo;
-    private WeatherControllerImpl mWeatherController;
 
     private enum SwipeLockedDirection {
         UNKNOWN,
@@ -334,6 +336,9 @@ public class NotificationPanelView extends PanelView implements
             } catch (RemoteException e){
                 e.printStackTrace();
             }
+        }
+
+        public void onChildTriggered(View v) {
         }
 
         @Override
@@ -434,11 +439,6 @@ public class NotificationPanelView extends PanelView implements
         mLiveLockscreenController = liveController;
     }
 
-    public void setWeatherController(WeatherControllerImpl weatherController) {
-        mWeatherController = weatherController;
-        mWeatherController.addCallback(this);
-    }
-
     @Override
     protected void onFinishInflate() {
         super.onFinishInflate();
@@ -447,9 +447,9 @@ public class NotificationPanelView extends PanelView implements
         mKeyguardStatusBar = (KeyguardStatusBarView) findViewById(R.id.keyguard_header);
         mKeyguardStatusView = (KeyguardStatusView) findViewById(R.id.keyguard_status_view);
         mQsContainer = (QSContainer) findViewById(R.id.quick_settings_container);
+        mQsPanel = (QSPanel) findViewById(R.id.quick_settings_panel);
         mTaskManagerPanel = (LinearLayout) findViewById(R.id.task_manager_panel);
-        mQsPanel = (QSDragPanel) findViewById(R.id.quick_settings_panel);
-        mQsPanel.setPanelView(this);
+        mClipper = new QSDetailClipper(mTaskManagerPanel);
         mClockView = (TextView) findViewById(R.id.clock_view);
         mScrollView = (ObservableScrollView) findViewById(R.id.scroll_view);
         mScrollView.setFocusable(false);
@@ -542,14 +542,12 @@ public class NotificationPanelView extends PanelView implements
                 }
             }
         });
+
+        setQSStroke();
         setQSBackgroundAlpha();
-	mQsColorSwitch = Settings.System.getIntForUser(mContext.getContentResolver(),
-                Settings.System.QS_COLOR_SWITCH, 0,
-                UserHandle.USER_CURRENT) == 1;
-            setQSBackgroundColor();
+        setQSBackgroundColor();
             
        mLockPatternUtils = new CmLockPatternUtils(getContext());
-        mKeyguardWeatherInfo = (TextView) mKeyguardStatusView.findViewById(R.id.weather_info);
     }
 
     public boolean isAffordanceSwipeInProgress() {
@@ -567,7 +565,6 @@ public class NotificationPanelView extends PanelView implements
     protected void onDetachedFromWindow() {
         super.onDetachedFromWindow();
         mSettingsObserver.unobserve();
-        mWeatherController.removeCallback(this);
     }
 
     @Override
@@ -866,14 +863,6 @@ public class NotificationPanelView extends PanelView implements
             MetricsLogger.count(mContext, COUNTER_PANEL_OPEN_PEEK, 1);
             return true;
         }
-        if (mQsPanel.isOnSettingsPage() && isInQsArea(event.getX(), event.getY(), false)
-                && mQsExpanded) {
-            mIntercepting = false;
-            // we explicitly do not intercept the touch event here to let the qs settings page
-            // scroll as necessary while not blocking horizontal swipes and allowing the panel
-            // to be collapsed when grabbed below the qs settings page as well.
-            return false;
-        }
         if (!isFullyCollapsed() && onQsIntercept(event)) {
             return true;
         }
@@ -1156,14 +1145,9 @@ public class NotificationPanelView extends PanelView implements
     }
 
     private boolean isInQsArea(float x, float y) {
-        return isInQsArea(x, y, true);
-    }
-
-    private boolean isInQsArea(float x, float y, boolean includeNotifications) {
         return (x >= mScrollView.getX() && x <= mScrollView.getX() + mScrollView.getWidth()) &&
-                ((includeNotifications
-                        && y <= mNotificationStackScroller.getBottomMostNotificationBottom())
-                        || y <= mQsContainer.getY() + mQsContainer.getHeight());
+                (y <= mNotificationStackScroller.getBottomMostNotificationBottom()
+                || y <= mQsContainer.getY() + mQsContainer.getHeight());
     }
 
     private boolean isOpenQsEvent(MotionEvent event) {
@@ -1295,13 +1279,8 @@ public class NotificationPanelView extends PanelView implements
                 mTrackingPointer = -1;
                 trackMovement(event);
                 float fraction = getQsExpansionFraction();
-                final boolean fling = (fraction != 0f || y >= mInitialTouchY)
-                        && (fraction != 1f || y <= mInitialTouchY);
-                final boolean flingExpand = Math.abs(getCurrentVelocity())
-                        > mFlingAnimationUtils.getMinVelocityPxPerSecond();
-                final boolean detailFling = mDetailScrollLock && mQsExpanded
-                        && flingExpand;
-                if ((fling && !mDetailScrollLock) || detailFling) {
+                if ((fraction != 0f || y >= mInitialTouchY)
+                        && (fraction != 1f || y <= mInitialTouchY)) {
                     flingQsWithCurrentVelocity(y,
                             event.getActionMasked() == MotionEvent.ACTION_CANCEL);
                 } else {
@@ -1884,8 +1863,7 @@ public class NotificationPanelView extends PanelView implements
                 && y >= header.getTop() && y <= header.getBottom();
 
         if (mQsExpanded) {
-            return onHeader || mDetailScrollLock
-                    || (mScrollView.isScrolledToBottom() && yDiff < 0) && isInQsArea(x, y);
+            return onHeader || (mScrollView.isScrolledToBottom() && yDiff < 0) && isInQsArea(x, y);
         } else {
             return onHeader;
         }
@@ -1903,20 +1881,28 @@ public class NotificationPanelView extends PanelView implements
     }
 
     public void setTaskManagerVisibility(boolean taskManagerShowing) {
-        if (mShowTaskManager) {
+        if (mShowTaskManager && !mKeyguardShowing) {
             mTaskManagerShowing = taskManagerShowing;
             cancelAnimation();
-            boolean expandVisually = mQsExpanded || mStackScrollerOverscrolling;
-            mQsPanel.setVisibility(expandVisually && !taskManagerShowing
-                    ? View.VISIBLE : View.GONE);
-            mTaskManagerPanel.setVisibility(expandVisually && taskManagerShowing
-                    && !mKeyguardShowing ? View.VISIBLE : View.GONE);
+            int x = mQsPanel.getLeft() + mQsPanel.getWidth() / 2;
+            int y = mQsPanel.getTop() / 2;
+            if (!taskManagerShowing) {
+                mQsPanel.setVisibility(View.VISIBLE);
+            }
+            mClipper.animateCircularClip(x, y, taskManagerShowing, mHideQsPanelWhenDone);
         }
     }
 
+   private final AnimatorListenerAdapter mHideQsPanelWhenDone = new AnimatorListenerAdapter() {
+        public void onAnimationEnd(Animator animation) {
+            if (mTaskManagerShowing) {
+			mTaskManagerPanel.setVisibility(View.VISIBLE);
+			mQsPanel.setVisibility(View.GONE);
+            }
+        };
+    };
 
-
-  private void cancelAnimation() {
+    private void cancelAnimation() {
         if (mQsExpansionAnimator != null) {
             mQsExpansionAnimator.cancel();
         }
@@ -2006,7 +1992,7 @@ public class NotificationPanelView extends PanelView implements
      */
     private int getTempQsMaxExpansion() {
         int qsTempMaxExpansion = mQsMaxExpansionHeight;
-        if (mScrollYOverride != -1 && !mDetailScrollLock) {
+        if (mScrollYOverride != -1) {
             qsTempMaxExpansion -= mScrollYOverride;
         }
         return qsTempMaxExpansion;
@@ -2861,6 +2847,18 @@ public class NotificationPanelView extends PanelView implements
                     false, this, UserHandle.USER_ALL);
             resolver.registerContentObserver(Settings.System.getUriFor(
                     Settings.System.QS_TRANSPARENT_SHADE),
+                     false, this, UserHandle.USER_ALL);
+            resolver.registerContentObserver(Settings.System.getUriFor(
+                    Settings.System.QS_STROKE),
+                    false, this, UserHandle.USER_ALL);
+            resolver.registerContentObserver(Settings.System.getUriFor(
+                    Settings.System.QS_STROKE_COLOR),
+                    false, this, UserHandle.USER_ALL);
+            resolver.registerContentObserver(Settings.System.getUriFor(
+                    Settings.System.QS_STROKE_THICKNESS),
+                    false, this, UserHandle.USER_ALL);
+            resolver.registerContentObserver(Settings.System.getUriFor(
+                    Settings.System.QS_CORNER_RADIUS),
                     false, this, UserHandle.USER_ALL);
             update();
         }
@@ -2878,26 +2876,6 @@ public class NotificationPanelView extends PanelView implements
         @Override
         public void onChange(boolean selfChange, Uri uri) {
 	   ContentResolver resolver = mContext.getContentResolver();
-
-	  if (uri.equals(Settings.System.getUriFor(
-                        Settings.System.QS_HEADER_TEXT_COLOR))
-                    || uri.equals(Settings.System.getUriFor(
-                        Settings.System.QS_HEADER_COLOR))) {
-                    setQSBackgroundColor();
-                } else if (uri.equals(Settings.System.getUriFor(
-                        Settings.System.QS_ICON_COLOR))
-                    || uri.equals(Settings.System.getUriFor(
-                        Settings.System.QS_TEXT_COLOR))) {
-                    setQSColors();
-                }  else if (uri.equals(Settings.System.getUriFor(
-                    Settings.System.QS_COLOR_SWITCH))) {
-                setQSBackgroundColor();
-		setQSColors();
-		} else if (uri.equals(Settings.System.getUriFor(
-                        Settings.System.QS_BACKGROUND_COLOR))) {
-		    setQSBackgroundColor();
-                    setQSColors();
-                } 
 		update();
         }
 
@@ -2912,22 +2890,25 @@ public class NotificationPanelView extends PanelView implements
                     UserHandle.USER_CURRENT) == 1;
             mDoubleTapToSleepAnywhere = Settings.System.getIntForUser(resolver,
                     Settings.System.DOUBLE_TAP_SLEEP_ANYWHERE, 0, UserHandle.USER_CURRENT) == 1;
-        mQsColorSwitch = Settings.System.getIntForUser(mContext.getContentResolver(),
-                Settings.System.QS_COLOR_SWITCH, 0,
-                UserHandle.USER_CURRENT) == 1;
-            int mQSBackgroundColor = Settings.System.getInt(
-                    resolver, Settings.System.QS_BACKGROUND_COLOR, 0xff263238);
-                setQSBackgroundColor();
-                setQSColors();
 
             boolean liveLockScreenEnabled = CMSettings.Secure.getInt(
                     resolver, CMSettings.Secure.LIVE_LOCK_SCREEN_ENABLED, 0) == 1;
             mQSShadeAlpha = Settings.System.getInt(
                     resolver, Settings.System.QS_TRANSPARENT_SHADE, 255);
-            setQSBackgroundAlpha();
             mQsSmartPullDown = Settings.System.getIntForUser(
                     resolver, Settings.System.QS_SMART_PULLDOWN, 0,
                     UserHandle.USER_CURRENT);
+            mQSStroke = Settings.System.getInt(mContext.getContentResolver(),
+                        Settings.System.QS_STROKE, 0);
+            mCustomStrokeColor = Settings.System.getInt(mContext.getContentResolver(),
+                        Settings.System.QS_STROKE_COLOR, mContext.getResources().getColor(R.color.system_accent_color));
+            mCustomStrokeThickness = Settings.System.getInt(mContext.getContentResolver(),
+                        Settings.System.QS_STROKE_THICKNESS, 4);
+            mCustomCornerRadius = Settings.System.getInt(mContext.getContentResolver(),
+                        Settings.System.QS_CORNER_RADIUS, 0);
+
+            setQSStroke();
+            setQSBackgroundAlpha();
         }
     }
 
@@ -2942,7 +2923,30 @@ public class NotificationPanelView extends PanelView implements
             }
         }
     }
-        
+
+    private void setQSStroke() {
+        final GradientDrawable qSGd = new GradientDrawable();
+        if (mQsContainer != null) {
+            if (mQSStroke == 0) { // Disable by setting border thickness to 0
+                qSGd.setColor(mContext.getResources().getColor(R.color.system_primary_color));
+                qSGd.setStroke(0, mContext.getResources().getColor(R.color.system_accent_color));
+                qSGd.setCornerRadius(mCustomCornerRadius);
+                mQsContainer.setBackground(qSGd);
+            } else if (mQSStroke == 1) { // use accent color for border
+                qSGd.setColor(mContext.getResources().getColor(R.color.system_primary_color));
+                qSGd.setStroke(mCustomStrokeThickness, mContext.getResources().getColor(R.color.system_accent_color));
+            } else if (mQSStroke == 2) { // use custom border color
+                qSGd.setColor(mContext.getResources().getColor(R.color.system_primary_color));
+                qSGd.setStroke(mCustomStrokeThickness, mCustomStrokeColor);
+            }
+
+            if (mQSStroke != 0) {
+                qSGd.setCornerRadius(mCustomCornerRadius);
+                mQsContainer.setBackground(qSGd);
+            }
+        }
+    }
+
     @Override
     public boolean hasOverlappingRendering() {
         return !mDozing;
@@ -3013,44 +3017,42 @@ public class NotificationPanelView extends PanelView implements
         return !tasks.isEmpty() && pkgName.equals(tasks.get(0).topActivity.getPackageName());
     }
 
-    public void setDetailRequestedScrollLock(boolean detailScrollFlag) {
-        if (mDetailScrollLock != detailScrollFlag) {
-            if (mStatusBarState != StatusBarState.SHADE) {
-                mDetailScrollLock = false;
-            } else {
-                mDetailScrollLock = detailScrollFlag;
-            }
-            if (!detailScrollFlag && getQsExpansionFraction() > 0.3f) {
-                flingSettings(getCurrentVelocity(), true, new Runnable() {
-                    @Override
-                    public void run() {
-                        mStackScrollerOverscrolling = false;
-                        mQsExpansionFromOverscroll = false;
-                        updateQsState();
-                        updateHeader();
-                        updateMaxHeadsUpTranslation();
-                        updatePanelExpanded();
-                        requestLayout();
-                    }
-                }, false);
-            } else {
-                requestLayout();
-            }
-        }
-    }
 
-    @Override
-    public void onWeatherChanged(WeatherController.WeatherInfo info) {
-        if (!mKeyguardWeatherEnabled || Double.isNaN(info.temp) || info.condition == null) {
-            mKeyguardWeatherInfo.setVisibility(GONE);
-        } else {
-            mKeyguardWeatherInfo.setText(mContext.getString(
-                    R.string.keyguard_status_view_weather_format,
-                    WeatherUtils.formatTemperature(info.temp, info.tempUnit),
-                    info.condition));
-            mKeyguardWeatherInfo.setVisibility(VISIBLE);
-        }
-    }
+ public void setQSBackgroundColor() {
+	final Resources res = getContext().getResources();
+        ContentResolver resolver = mContext.getContentResolver();
+	int mStockBg = res.getColor(R.color.quick_settings_panel_background);
+        mQsColorSwitch = Settings.System.getIntForUser(mContext.getContentResolver(),
+                Settings.System.QS_COLOR_SWITCH, 0,
+                UserHandle.USER_CURRENT) == 1;
+        int mQSBackgroundColor = Settings.System.getInt( mContext.getContentResolver(), 
+			Settings.System.QS_BACKGROUND_COLOR, 0xff263238);
+	if (mQsColorSwitch) {
+        	if (mQsContainer != null) {
+               		 mQsContainer.getBackground().setColorFilter(
+                         mQSBackgroundColor, Mode.SRC_ATOP);
+           		 }
+       		if (mQsPanel != null) {
+            		mQsPanel.setDetailBackgroundColor(mQSBackgroundColor);
+       			 }
+			}  else {
+
+		if (mQsContainer != null) {
+               		 mQsContainer.getBackground().setColorFilter(
+                         mStockBg, Mode.SRC_ATOP);
+           		 }
+       		if (mQsPanel != null) {
+            		mQsPanel.setDetailBackgroundColor(mStockBg);
+       			 }
+		}
+	}
+
+    public void setQSColors() {
+        if (mQsPanel != null) {
+            mQsPanel.refreshAllTiles();
+	}
+       }
+
 
     private class SlideInAnimationListener implements ValueAnimator.AnimatorUpdateListener,
             ValueAnimator.AnimatorListener {
@@ -3114,40 +3116,5 @@ public class NotificationPanelView extends PanelView implements
         animator.addUpdateListener(mSlideInAnimationListener);
         animator.addListener(mSlideInAnimationListener);
         animator.start();
-    }
-
- public void setQSBackgroundColor() {
-	final Resources res = getContext().getResources();
-        ContentResolver resolver = mContext.getContentResolver();
-	int mStockBg = res.getColor(R.color.quick_settings_panel_background);
-        mQsColorSwitch = Settings.System.getIntForUser(mContext.getContentResolver(),
-                Settings.System.QS_COLOR_SWITCH, 0,
-                UserHandle.USER_CURRENT) == 1;
-        int mQSBackgroundColor = Settings.System.getInt( mContext.getContentResolver(), 
-			Settings.System.QS_BACKGROUND_COLOR, 0xff263238);
-	if (mQsColorSwitch) {
-        	if (mQsContainer != null) {
-               		 mQsContainer.getBackground().setColorFilter(
-                         mQSBackgroundColor, Mode.SRC_IN);
-           		 }
-       		if (mQsPanel != null) {
-            		mQsPanel.setDetailBackgroundColor(mQSBackgroundColor);
-       			 }
-			}  else {
-
-		if (mQsContainer != null) {
-               		 mQsContainer.getBackground().setColorFilter(
-                         mStockBg, Mode.SRC_OVER);
-           		 }
-       		if (mQsPanel != null) {
-            		mQsPanel.setDetailBackgroundColor(mStockBg);
-       			 }
-		}
-	}
-
-    public void setQSColors() {
-        if (mQsPanel != null) {
-            mQsPanel.refreshAllTiles();
-        }
     }
 }

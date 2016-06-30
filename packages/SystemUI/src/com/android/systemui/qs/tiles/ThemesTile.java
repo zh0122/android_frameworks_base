@@ -22,23 +22,23 @@ import android.app.ActivityManagerNative;
 import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
+import android.content.pm.ApplicationInfo;
 import android.content.pm.PackageManager;
 import android.content.pm.ResolveInfo;
 import android.content.res.ThemeConfig;
 import android.database.Cursor;
 import android.os.RemoteException;
-import android.util.Log;
 import android.view.View;
 import android.view.ViewGroup;
-
-import com.android.internal.logging.MetricsLogger;
+import android.widget.AdapterView;
+import android.widget.ListView;
+import android.widget.Toast;
 import com.android.systemui.R;
-import com.android.systemui.qs.QSDetailItems;
 import com.android.systemui.qs.QSDetailItems.Item;
+import com.android.systemui.qs.QSDetailItemsList;
 import com.android.systemui.qs.QSTile;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 
 import cyanogenmod.app.StatusBarPanelCustomTile;
@@ -52,16 +52,13 @@ import org.cyanogenmod.internal.logging.CMMetricsLogger;
  **/
 public class ThemesTile extends QSTile<QSTile.BooleanState> implements ThemeManager.ThemeChangeListener ,ThemeManager.ThemeProcessingListener {
 
-    //HAX: CMTE doesn't call "handleDestroy()" so we must find a way to remove old tile
-    private static int i = 0;
-    private final int localI;
-
     private enum Mode {ALL_THEMES, ICON_PACK, APP_THEME}
 
     private static final String CATEGORY_THEME_CHOOSER = "cyanogenmod.intent.category.APP_THEMES";
     private final ThemesDetailAdapter mDetailAdapter;
     private ThemeManager mService;
     private Mode mode;
+    private String mTopAppLabel;
 
     public ThemesTile(Host host) {
         super(host);
@@ -70,8 +67,6 @@ public class ThemesTile extends QSTile<QSTile.BooleanState> implements ThemeMana
         mState.value = true;
         mService.registerThemeChangeListener(this);
         // Log.d("ThemesTile", "new");
-        i++;
-        localI = i;
     }
 
     @Override
@@ -107,6 +102,7 @@ public class ThemesTile extends QSTile<QSTile.BooleanState> implements ThemeMana
             mode = Mode.ICON_PACK;
         } else {
             mode = Mode.APP_THEME;
+            mTopAppLabel = getTopAppLabel(getTopActivity());
         }
 
         showDetail(true);
@@ -121,7 +117,7 @@ public class ThemesTile extends QSTile<QSTile.BooleanState> implements ThemeMana
 
     @Override
     public int getMetricsCategory() {
-        return MetricsLogger.DISPLAY;
+        return CMMetricsLogger.DONT_LOG;
     }
 
     @Override
@@ -147,26 +143,17 @@ public class ThemesTile extends QSTile<QSTile.BooleanState> implements ThemeMana
     @Override
     public void onFinish(boolean isSuccess) {
 
-        if (localI != i) {
-            mService.unregisterProcessingListener(this);
-            return;
-        }
-
-        // Log.d("ThemesTile", "onFinish");
-
         if (mode == Mode.APP_THEME) {
             showDetail(false);
         }
     }
 
-    private final class ThemesDetailAdapter implements DetailAdapter, QSDetailItems.Callback {
+    private final class ThemesDetailAdapter implements CustomTitleDetailAdapter,
+            AdapterView.OnItemClickListener {
 
-        private QSDetailItems mItems;
-        private Item[] items;
-        private int firstItemId;
-
-        private final int mMaxItems = getHost().getContext().getResources().getInteger(
-                R.integer.quick_settings_detail_max_item_count);
+        private QSDetailItemsList mItemsList;
+        private List<Item> items = new ArrayList<>();
+        private QSDetailItemsList.QSDetailListAdapter mAdapter;
 
         @Override
         public int getTitle() {
@@ -176,20 +163,99 @@ public class ThemesTile extends QSTile<QSTile.BooleanState> implements ThemeMana
                 case ICON_PACK:
                     return R.string.quick_settings_themes_icon_packs;
                 case APP_THEME:
-                    return R.string.quick_settings_themes_app_theme;
+                    return USES_CUSTOM_DETAIL_ADAPTER_TITLE;
                 default:
-                    return -1;
+                    return R.string.quick_settings_themes;
             }
         }
 
         @Override
-        public void onDetailItemClick(QSDetailItems.Item item) {
+        public String getCustomTitle() {
+            switch (mode) {
+                case APP_THEME:
+                    final String topAppLabel = mTopAppLabel;
+                    return mContext.getString(
+                            R.string.quick_settings_themes_app_theme_with_label, topAppLabel);
+                default:
+                    return mContext.getString(R.string.quick_settings_themes_app_theme);
+            }
+        }
 
-            String pkg = (String) item.tag;
+        @Override
+        public Boolean getToggleState() {
+            return null;
+        }
 
-            // Log.d("ThemesTile applying", pkg);
+        @Override
+        public View createDetailView(Context context, View convertView, ViewGroup parent) {
+            mItemsList = QSDetailItemsList.convertOrInflate(context, convertView, parent);
+            mAdapter = new QSDetailItemsList.QSDetailListAdapter(context, items);
+            mAdapter.setBiggerHeight(false);
+            ListView listView = mItemsList.getListView();
+            listView.setDivider(null);
+            listView.setOnItemClickListener(this);
+            listView.setAdapter(mAdapter);
+            updateItems();
+            return mItemsList;
+        }
 
-            ThemeChangeRequest.Builder builder = new ThemeChangeRequest.Builder();
+        private void updateItems() {
+
+            if (mItemsList == null) return;
+
+            items.clear();
+
+            switch (mode) {
+                case ALL_THEMES:
+                    // Log.d("ThemesTile", "Showing themes");
+                    items.addAll(getAllThemes());
+                    break;
+                case APP_THEME:
+                    // Log.d("ThemesTile", "Showing themes for " + getTopApp());
+                    items.addAll(getAllThemesForApp(getTopApp()));
+                    break;
+                case ICON_PACK:
+                    // Log.d("ThemesTile", "Showing icon packs");
+                    items.addAll(getAllIconPacks());
+                    break;
+                default:
+                    throw new RuntimeException();
+            }
+
+            mAdapter.notifyDataSetChanged();
+
+        }
+
+        @Override
+        public Intent getSettingsIntent() {
+            Intent intent = new Intent(Intent.ACTION_MAIN);
+            intent.addCategory(CATEGORY_THEME_CHOOSER);
+            intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TOP);
+            return intent;
+        }
+
+        @Override
+        public void setToggleState(boolean state) {
+
+        }
+
+        @Override
+        public int getMetricsCategory() {
+            return CMMetricsLogger.DONT_LOG;
+        }
+
+        @Override
+        public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+
+            Item selectedItem = (Item) parent.getItemAtPosition(position);
+
+            if (selectedItem.icon == R.drawable.ic_qs_themes_on){
+                return;
+            }
+
+            String pkg = (String) selectedItem.tag;
+
+            final ThemeChangeRequest.Builder builder = new ThemeChangeRequest.Builder();
 
             if (mode == Mode.ALL_THEMES) {
                 builder.setStatusBar(pkg);
@@ -203,103 +269,18 @@ public class ThemesTile extends QSTile<QSTile.BooleanState> implements ThemeMana
                 builder.setAppOverlay(getTopApp(), pkg);
             }
 
-            mService.requestThemeChange(builder.build(), false);
-
-        }
-
-        @Override
-        public void onDetailItemDisconnect(QSDetailItems.Item item) {
-
-        }
-
-        @Override
-        public Boolean getToggleState() {
-            return mState.value;
-        }
-
-        @Override
-        public View createDetailView(Context context, View convertView, ViewGroup parent) {
-            mItems = QSDetailItems.convertOrInflate(context, convertView, parent);
-            mItems.setTagSuffix("Themes");
-            mItems.setCallback(this);
-            mItems.setMinHeightInItems(0);
-            updateItems();
-            setItemsVisible();
-            return mItems;
-        }
-
-        public void setItemsVisible() {
-            if (mItems == null) return;
-            mItems.setItemsVisible(true);
-        }
-
-        private void updateItems() {
-
-            if (mItems == null) return;
-
-            if (isTopActivityLauncher()) {
-                // Log.d("ThemesTile", "This is launcher");
+            // let's collapse the panel when we are going to recreate the statusbar
+            if (mode == Mode.ALL_THEMES || mode == Mode.ICON_PACK) {
+                mHost.collapsePanels();
             }
 
-            switch (mode) {
-                case ALL_THEMES:
-                    // Log.d("ThemesTile", "Showing themes");
-                    items = getAllThemes();
-                    break;
-                case APP_THEME:
-                    // Log.d("ThemesTile", "Showing themes for " + getTopApp());
-                    items = getAllThemesForApp(getTopApp());
-                    break;
-                case ICON_PACK:
-                    // Log.d("ThemesTile", "Showing icon packs");
-                    items = getAllIconPacks();
-                    break;
-                default:
-                    throw new RuntimeException();
-            }
-
-            mItems.setItems(items);
-
-            firstItemId = 0;
-
-        }
-
-        @Override
-        public Intent getSettingsIntent() {
-            Intent intent = new Intent(Intent.ACTION_MAIN);
-            intent.addCategory(CATEGORY_THEME_CHOOSER);
-            intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TOP);
-            return intent;
-        }
-
-    	@Override
-        public StatusBarPanelCustomTile getCustomTile() {
-            return null;
-        }
-
-
-        @Override
-        public void setToggleState(boolean state) {
-
-            if (firstItemId + mMaxItems >= items.length) {
-                //We've show all items - move to beginning
-                firstItemId = 0;
-                mItems.setItems(items);
-                return;
-            }
-
-            //Aka new first item
-            int newFirstItemId = firstItemId + mMaxItems;
-            int newLastItemId = Math.min(items.length, newFirstItemId + mMaxItems);
-
-            firstItemId = newFirstItemId;
-
-            mItems.setItems(Arrays.copyOfRange(items, newFirstItemId, newLastItemId));
-        }
-
-        @Override
-        public int getMetricsCategory() {
-            return MetricsLogger.DISPLAY;
+            // delay this slightly to allow for panel collapse or tap ripple without jank
+            mHandler.postDelayed(new Runnable() {
+                @Override
+                public void run() {
+                    mService.requestThemeChange(builder.build(), false);
+                }
+            }, 500);
         }
 
         private String getCurrentIconPack() {
@@ -364,7 +345,7 @@ public class ThemesTile extends QSTile<QSTile.BooleanState> implements ThemeMana
 
         }
 
-        private Item[] getAllThemesForApp(String app) {
+        private List<Item> getAllThemesForApp(String app) {
 
             String currentThemePkg = getCurrentTheme(app);
 
@@ -392,11 +373,11 @@ public class ThemesTile extends QSTile<QSTile.BooleanState> implements ThemeMana
 
             }
 
-            return itemList.toArray(new Item[itemList.size()]);
+            return itemList;
 
         }
 
-        private Item[] getAllThemes() {
+        private List<Item> getAllThemes() {
 
             String currentThemePkg = getCurrentTheme();
 
@@ -418,11 +399,11 @@ public class ThemesTile extends QSTile<QSTile.BooleanState> implements ThemeMana
 
             }
 
-            return itemList.toArray(new Item[itemList.size()]);
+            return itemList;
 
         }
 
-        private Item[] getAllIconPacks() {
+        private List<Item> getAllIconPacks() {
 
             String currentThemePkg = getCurrentIconPack();
 
@@ -443,7 +424,7 @@ public class ThemesTile extends QSTile<QSTile.BooleanState> implements ThemeMana
 
             }
 
-            return itemList.toArray(new Item[itemList.size()]);
+            return itemList;
 
         }
 
@@ -476,7 +457,6 @@ public class ThemesTile extends QSTile<QSTile.BooleanState> implements ThemeMana
             return itemList;
 
         }
-
     }
 
 
@@ -493,6 +473,18 @@ public class ThemesTile extends QSTile<QSTile.BooleanState> implements ThemeMana
 
     private String getTopApp() {
         return getTopActivity().getPackageName();
+    }
+
+    private String getTopAppLabel(ComponentName componentName) {
+        String label = null;
+        PackageManager pm = mContext.getPackageManager();
+        try {
+            ApplicationInfo info = pm.getApplicationInfo(componentName.getPackageName(), 0);
+            label = info.loadLabel(pm).toString();
+        } catch (Exception e) {
+            label = mContext.getString(R.string.quick_settings_themes_app_theme);
+        }
+        return label;
     }
 
     private boolean isActivityLauncher(ComponentName componentName) {

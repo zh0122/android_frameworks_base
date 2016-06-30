@@ -647,15 +647,6 @@ public abstract class ActivityManagerNative extends Binder implements IActivityM
             return true;
         }
 
-        case IS_PACKAGE_IN_FOREGROUND_TRANSACTION: {
-            data.enforceInterface(IActivityManager.descriptor);
-            String packageName = data.readString();
-            boolean result = isPackageInForeground(packageName);
-            reply.writeNoException();
-            reply.writeInt(result ? 1 : 0);
-            return true;
-        }
-
         case GET_RECENT_TASKS_TRANSACTION: {
             data.enforceInterface(IActivityManager.descriptor);
             int maxNum = data.readInt();
@@ -833,6 +824,16 @@ public abstract class ActivityManagerNative extends Binder implements IActivityM
                 ? getTaskForActivity(token, onlyRoot) : -1;
                 reply.writeNoException();
             reply.writeInt(res);
+            return true;
+        }
+
+        case GET_ACTIVITY_FOR_TASK_TRANSACTION: {
+            data.enforceInterface(IActivityManager.descriptor);
+            int task = data.readInt();
+            boolean onlyRoot = data.readInt() != 0;
+            IBinder res = getActivityForTask(task, onlyRoot);
+            reply.writeNoException();
+            reply.writeStrongBinder(res);
             return true;
         }
 
@@ -2098,9 +2099,11 @@ public abstract class ActivityManagerNative extends Binder implements IActivityM
 
         case SHOW_BOOT_MESSAGE_TRANSACTION: {
             data.enforceInterface(IActivityManager.descriptor);
-            CharSequence msg = TextUtils.CHAR_SEQUENCE_CREATOR.createFromParcel(data);
+            ApplicationInfo info = ApplicationInfo.CREATOR.createFromParcel(data);
+            int current = data.readInt();
+            int total = data.readInt();
             boolean always = data.readInt() != 0;
-            showBootMessage(msg, always);
+            showBootMessage(info, current, total, always);
             reply.writeNoException();
             return true;
         }
@@ -3309,18 +3312,6 @@ class ActivityManagerProxy implements IActivityManager
         reply.recycle();
         return list;
     }
-    public boolean isPackageInForeground(String packageName) throws RemoteException {
-        Parcel data = Parcel.obtain();
-        Parcel reply = Parcel.obtain();
-        data.writeInterfaceToken(IActivityManager.descriptor);
-        data.writeString(packageName);
-        mRemote.transact(IS_PACKAGE_IN_FOREGROUND_TRANSACTION, data, reply, 0);
-        reply.readException();
-        boolean result = reply.readInt() != 0;
-        data.recycle();
-        reply.recycle();
-        return result;
-    }
     public List<ActivityManager.RecentTaskInfo> getRecentTasks(int maxNum,
             int flags, int userId) throws RemoteException {
         Parcel data = Parcel.obtain();
@@ -3565,6 +3556,21 @@ class ActivityManagerProxy implements IActivityManager
         reply.readException();
         data.recycle();
         reply.recycle();
+    }
+
+    public IBinder getActivityForTask(int task, boolean onlyRoot) throws RemoteException
+    {
+        Parcel data = Parcel.obtain();
+        Parcel reply = Parcel.obtain();
+        data.writeInterfaceToken(IActivityManager.descriptor);
+        data.writeInt(task);
+        data.writeInt(onlyRoot ? 1 : 0);
+        mRemote.transact(GET_ACTIVITY_FOR_TASK_TRANSACTION, data, reply, 0);
+        reply.readException();
+        IBinder res = reply.readStrongBinder();
+        data.recycle();
+        reply.recycle();
+        return res;
     }
     public int getTaskForActivity(IBinder token, boolean onlyRoot) throws RemoteException
     {
@@ -5283,11 +5289,14 @@ class ActivityManagerProxy implements IActivityManager
         return res;
     }
 
-    public void showBootMessage(CharSequence msg, boolean always) throws RemoteException {
+    public void showBootMessage(ApplicationInfo info, int current, int total,
+            boolean always) throws RemoteException {
         Parcel data = Parcel.obtain();
         Parcel reply = Parcel.obtain();
         data.writeInterfaceToken(IActivityManager.descriptor);
-        TextUtils.writeToParcel(msg, data, 0);
+        info.writeToParcel(data, 0);
+        data.writeInt(current);
+        data.writeInt(total);
         data.writeInt(always ? 1 : 0);
         mRemote.transact(SHOW_BOOT_MESSAGE_TRANSACTION, data, reply, 0);
         reply.readException();

@@ -23,8 +23,8 @@ import android.annotation.ChaosLab;
 import android.annotation.ChaosLab.Classification;
 import android.app.Activity;
 import android.app.ActivityManager;
+import android.app.ActivityManager.RunningAppProcessInfo;
 import android.app.ActivityManagerNative;
-import android.app.INotificationManager;
 import android.app.Notification;
 import android.app.NotificationManager;
 import android.app.PendingIntent;
@@ -61,7 +61,9 @@ import android.os.Bundle;
 import android.os.Handler;
 import android.os.IBinder;
 import android.os.Message;
+import android.os.Messenger;
 import android.os.PowerManager;
+import android.os.Process;
 import android.os.RemoteException;
 import android.os.ServiceManager;
 import android.os.SystemProperties;
@@ -130,6 +132,7 @@ import com.android.systemui.statusbar.appcirclesidebar.AppCircleSidebar;
 import com.android.systemui.statusbar.phone.NavigationBarView;
 import com.android.systemui.statusbar.phone.NotificationGroupManager;
 import com.android.systemui.statusbar.phone.StatusBarKeyguardViewManager;
+import com.android.systemui.statusbar.pie.PieController;
 import com.android.systemui.statusbar.policy.HeadsUpManager;
 import com.android.systemui.statusbar.policy.PreviewInflater;
 import com.android.systemui.statusbar.stack.NotificationStackScrollLayout;
@@ -166,6 +169,9 @@ public abstract class BaseStatusBar extends SystemUI implements
     protected static final int MSG_SHOW_NEXT_AFFILIATED_TASK = 1024;
     protected static final int MSG_SHOW_PREV_AFFILIATED_TASK = 1025;
     protected static final int MSG_CLEAR_RECENT_APPS = 1026;
+    protected static final int MSG_TOGGLE_LAST_APP = 1027;
+    protected static final int MSG_TOGGLE_KILL_APP = 1028;
+    protected static final int MSG_TOGGLE_SCREENSHOT = 1029;
 
     protected static final boolean ENABLE_HEADS_UP = true;
     // scores above this threshold should be displayed in heads up mode.
@@ -200,9 +206,16 @@ public abstract class BaseStatusBar extends SystemUI implements
 
     // for heads up notifications
     protected HeadsUpManager mHeadsUpManager;
+    protected boolean mForceAllHeads;
 
     protected int mCurrentUserId = 0;
     final protected SparseArray<UserInfo> mCurrentProfiles = new SparseArray<UserInfo>();
+
+    // PA Pie controls
+    protected PieController mPieController;
+    public int mOrientation = 0;
+
+    private OrientationEventListener mOrientationListener;
 
     protected int mLayoutDirection = -1; // invalid
     protected AccessibilityManager mAccessibilityManager;
@@ -287,7 +300,6 @@ public abstract class BaseStatusBar extends SystemUI implements
     private NotificationClicker mNotificationClicker = new NotificationClicker();
 
     protected AssistManager mAssistManager;
-    private INotificationManager mNoMan;
 
     // last theme that was applied in order to detect theme change (as opposed
     // to some other configuration change).
@@ -296,6 +308,25 @@ public abstract class BaseStatusBar extends SystemUI implements
     private ArrayList<String> mDndList = new ArrayList<String>();
     private ArrayList<String> mBlacklist = new ArrayList<String>();
     private ArrayList<String> mWhitelist = new ArrayList<String>();
+
+    public int getNotificationCount() {
+        return mNotificationData.getActiveNotifications().size();
+    }
+
+    private final ContentObserver mPieSettingsObserver = new ContentObserver(mHandler) {
+        @Override
+        public void onChange(boolean selfChange) {
+            update();
+        }
+
+        private void update() {
+            ContentResolver resolver = mContext.getContentResolver();
+            boolean pieEnabled = Settings.System.getIntForUser(resolver,
+                    Settings.System.PA_PIE_STATE, 0, UserHandle.USER_CURRENT) == 1;
+
+            updatePieControls(!pieEnabled);
+        }
+    };
 
     @Override  // NotificationData.Environment
     public boolean isDeviceProvisioned() {
@@ -343,6 +374,8 @@ public abstract class BaseStatusBar extends SystemUI implements
                     CMSettings.System.HEADS_UP_BLACKLIST_VALUES), false, this);
             resolver.registerContentObserver(CMSettings.System.getUriFor(
                     CMSettings.System.HEADS_UP_WHITELIST_VALUES), false, this);
+            resolver.registerContentObserver(Settings.System.getUriFor(
+                    Settings.System.HEADS_UP_FORCE_ALL), false, this, UserHandle.USER_ALL);
             update();
         }
 
@@ -360,6 +393,8 @@ public abstract class BaseStatusBar extends SystemUI implements
                     CMSettings.System.HEADS_UP_BLACKLIST_VALUES);
             final String whiteString = CMSettings.System.getString(resolver,
                     CMSettings.System.HEADS_UP_WHITELIST_VALUES);
+            mForceAllHeads = Settings.System.getIntForUser(resolver,
+                    Settings.System.HEADS_UP_FORCE_ALL, 0, UserHandle.USER_CURRENT) == 1;
             splitAndAddToArrayList(mDndList, dndString, "\\|");
             splitAndAddToArrayList(mBlacklist, blackString, "\\|");
             splitAndAddToArrayList(mWhitelist, whiteString, "\\|");
@@ -651,8 +686,6 @@ public abstract class BaseStatusBar extends SystemUI implements
         mDreamManager = IDreamManager.Stub.asInterface(
                 ServiceManager.checkService(DreamService.DREAM_SERVICE));
         mPowerManager = (PowerManager) mContext.getSystemService(Context.POWER_SERVICE);
-        mNoMan = (INotificationManager) INotificationManager.Stub.asInterface(
-                ServiceManager.getService(Context.NOTIFICATION_SERVICE));
 
         mContext.getContentResolver().registerContentObserver(
                 CMSettings.Secure.getUriFor(CMSettings.Secure.CM_SETUP_WIZARD_COMPLETED), false,
@@ -758,6 +791,80 @@ public abstract class BaseStatusBar extends SystemUI implements
         mContext.registerReceiverAsUser(mAllUsersReceiver, UserHandle.ALL, allUsersFilter,
                 null, null);
         updateCurrentProfilesCache();
+
+
+        SettingsObserver observer = new SettingsObserver(mHandler);
+        observer.observe();
+ 
+
+        mPieSettingsObserver.onChange(false);
+        mContext.getContentResolver().registerContentObserver(Settings.System.getUriFor(
+                Settings.System.PA_PIE_STATE), false, mPieSettingsObserver);
+        mContext.getContentResolver().registerContentObserver(Settings.System.getUriFor(
+                Settings.System.PA_PIE_GRAVITY), false, mPieSettingsObserver);
+    }
+
+    public void updatePieControls(boolean reset) {
+        ContentResolver resolver = mContext.getContentResolver();
+
+        if (reset) {
+            Settings.System.putIntForUser(resolver,
+                    Settings.System.PA_PIE_GRAVITY, 0, UserHandle.USER_CURRENT);
+            toggleOrientationListener(false);
+        } else {
+            getOrientationListener();
+            toggleOrientationListener(true);
+        }
+
+        if (mPieController == null) {
+            mPieController = PieController.getInstance();
+            mPieController.init(mContext, mWindowManager, this);
+        }
+        int gravity = Settings.System.getInt(resolver,
+                Settings.System.PA_PIE_GRAVITY, 0);
+        mPieController.resetPie(!reset, gravity);
+    }
+
+    public void toggleOrientationListener(boolean enable) {
+        if (mOrientationListener == null) {
+            if (!enable) {
+                // Do nothing if listener has already dropped
+                return;
+            } else {
+                boolean shouldEnable = Settings.System.getIntForUser(mContext.getContentResolver(),
+                        Settings.System.PA_PIE_STATE, 0, UserHandle.USER_CURRENT) == 1;
+                if (shouldEnable) {
+                    // Re-init Orientation listener for later action
+                    getOrientationListener();
+                } else {
+                    return;
+                }
+            }
+        }
+
+        if (enable && mPowerManager.isScreenOn()) {
+            mOrientationListener.enable();
+        } else {
+            mOrientationListener.disable();
+            // if it has been disabled, then don't leave it to
+            // prevent called from PhoneWindowManager
+            mOrientationListener = null;
+        }
+    }
+
+    private void getOrientationListener() {
+        if (mOrientationListener == null)
+            mOrientationListener = new OrientationEventListener(mContext,
+                    SensorManager.SENSOR_DELAY_NORMAL) {
+                @Override
+                public void onOrientationChanged(int orientation) {
+                    int rotation = mDisplay.getRotation();
+                    if (rotation != mOrientation) {
+                        if (mPieController != null) mPieController.detachPie();
+                        mOrientation = rotation;
+                    }
+                }
+            };
     }
 
     protected void notifyUserAboutHiddenNotifications() {
@@ -881,6 +988,12 @@ public abstract class BaseStatusBar extends SystemUI implements
             mLayoutDirection = ld;
             refreshLayout(ld);
         }
+
+        int rotation = mDisplay.getRotation();
+        if (rotation != mOrientation) {
+            if (mPieController != null) mPieController.detachPie();
+            mOrientation = rotation;
+        }
     }
 
     protected View updateNotificationVetoButton(View row, StatusBarNotification n) {
@@ -962,6 +1075,41 @@ public abstract class BaseStatusBar extends SystemUI implements
         startNotificationGutsIntent(intent, appUid);
     }
 
+    private void launchFloating(PendingIntent pIntent) {
+        Intent overlay = new Intent();
+        overlay.addFlags(Intent.FLAG_FLOATING_WINDOW | Intent.FLAG_ACTIVITY_CLEAR_TASK);
+        try {
+            ActivityManagerNative.getDefault().resumeAppSwitches();
+        } catch (RemoteException e) {
+        }
+        try {
+            pIntent.send(mContext, 0, overlay);
+        } catch (PendingIntent.CanceledException e) {
+            // the stack trace isn't very helpful here.  Just log the exception message.
+            Slog.w(TAG, "Sending contentIntent failed: " + e);
+        }
+        final boolean keyguardShowing = mStatusBarKeyguardViewManager.isShowing();
+        dismissKeyguardThenExecute(new OnDismissAction() {
+            @Override
+            public boolean onDismiss() {
+                AsyncTask.execute(new Runnable() {
+                    public void run() {
+                        try {
+                            if (keyguardShowing) {
+                                ActivityManagerNative.getDefault()
+                                        .keyguardWaitingForActivityDrawn();
+                            }
+                            overrideActivityPendingAppTransition(keyguardShowing);
+                        } catch (RemoteException e) {
+                        }
+                    }
+                });
+                animateCollapsePanels(CommandQueue.FLAG_EXCLUDE_RECENTS_PANEL, true /* force */);
+                return true;
+            }
+        }, false /* afterKeyguardGone */);
+    }
+
     private void startNotificationGutsIntent(final Intent intent, final int appUid) {
         final boolean keyguardShowing = mStatusBarKeyguardViewManager.isShowing();
         dismissKeyguardThenExecute(new OnDismissAction() {
@@ -997,6 +1145,7 @@ public abstract class BaseStatusBar extends SystemUI implements
         row.setTag(sbn.getPackageName());
         final View guts = row.getGuts();
         final String pkg = sbn.getPackageName();
+        final PendingIntent contentIntent = sbn.getNotification().contentIntent;
         String appname = pkg;
         Drawable pkgicon = null;
         int appUid = -1;
@@ -1016,6 +1165,7 @@ public abstract class BaseStatusBar extends SystemUI implements
         ((ImageView) row.findViewById(android.R.id.icon)).setImageDrawable(pkgicon);
         ((DateTimeView) row.findViewById(R.id.timestamp)).setTime(sbn.getPostTime());
         ((TextView) row.findViewById(R.id.pkgname)).setText(appname);
+        final View floatButton = guts.findViewById(R.id.notification_float_item);
         final View settingsButton = guts.findViewById(R.id.notification_inspect_item);
         final View appSettingsButton
                 = guts.findViewById(R.id.notification_inspect_app_provided_settings);
@@ -1048,8 +1198,21 @@ public abstract class BaseStatusBar extends SystemUI implements
                     removeNotification(sbn.getKey(), null);
                 }
             });
-
-            final Intent appSettingsQueryIntent
+	    if (floatButton!=null) {
+		  if (Settings.System.getInt(mContext.getContentResolver(),
+			Settings.System.FLOATING_WINDOW_MODE, 0) == 1) {
+			floatButton.setVisibility(View.VISIBLE);
+		  } else {
+			floatButton.setVisibility(View.GONE);
+		  }
+		  floatButton.setOnClickListener(new View.OnClickListener() {
+		  public void onClick(View v) {
+                    launchFloating(contentIntent);
+		    }
+		});
+            }
+			
+			final Intent appSettingsQueryIntent
                     = new Intent(Intent.ACTION_MAIN)
                     .addCategory(Notification.INTENT_CATEGORY_NOTIFICATION_PREFERENCES)
                     .setPackage(pkg);
@@ -1075,7 +1238,8 @@ public abstract class BaseStatusBar extends SystemUI implements
             } else {
                 appSettingsButton.setVisibility(View.GONE);
             }
-        } else {
+        }
+        if (appUid < 0) {
             settingsButton.setVisibility(View.GONE);
             appSettingsButton.setVisibility(View.GONE);
             filterButton.setVisibility(View.GONE);
@@ -1221,7 +1385,29 @@ public abstract class BaseStatusBar extends SystemUI implements
         }
     }
     
-      protected H createHandler() {
+
+    @Override
+    public void toggleLastApp() {
+        int msg = MSG_TOGGLE_LAST_APP;
+        mHandler.removeMessages(msg);
+        mHandler.sendEmptyMessage(msg);
+    }
+
+    @Override
+    public void toggleKillApp() {
+        int msg = MSG_TOGGLE_KILL_APP;
+        mHandler.removeMessages(msg);
+        mHandler.sendEmptyMessage(msg);
+    }
+
+    @Override
+    public void toggleScreenshot() {
+        int msg = MSG_TOGGLE_SCREENSHOT;
+        mHandler.removeMessages(msg);
+        mHandler.sendEmptyMessage(msg);
+    }
+
+    protected H createHandler() {
          return new H();
     }
     
@@ -1453,6 +1639,18 @@ public abstract class BaseStatusBar extends SystemUI implements
              case MSG_SHOW_PREV_AFFILIATED_TASK:
                   showRecentsPreviousAffiliatedTask();
                   break;
+             case MSG_TOGGLE_LAST_APP:
+                 if (DEBUG) Slog.d(TAG, "toggle last app");
+                 getLastApp();
+                 break;
+             case MSG_TOGGLE_KILL_APP:
+                 if (DEBUG) Slog.d(TAG, "toggle kill app");
+                 mHandler.post(mKillTask);
+                 break;
+             case MSG_TOGGLE_SCREENSHOT:
+                 if (DEBUG) Slog.d(TAG, "toggle screenshot");
+                 takeScreenshot();
+                 break;
             }
         }
     }
@@ -1519,6 +1717,7 @@ public abstract class BaseStatusBar extends SystemUI implements
             // cannot use isMediaNotification()
             if (sbn.getNotification().category != null
                     && sbn.getNotification().category.equals(Notification.CATEGORY_TRANSPORT)) {
+                Log.d("ro", "inflating media notification");
                 row = (MediaExpandableNotificationRow) inflater.inflate(
                         R.layout.status_bar_notification_row_media, parent, false);
                 ((MediaExpandableNotificationRow)row).setMediaController(
@@ -2415,9 +2614,14 @@ public abstract class BaseStatusBar extends SystemUI implements
             return false;
         }
 
+        // check if package is blacklisted first
+        if (isPackageBlacklisted(sbn.getPackageName()) || isPackageInDnd(getTopLevelPackage())) {
+            return false;
+        }
+ 
         Notification notification = sbn.getNotification();
         // some predicates to make the boolean logic legible
-        boolean whiteListed = isPackageWhitelisted(sbn.getPackageName());
+        boolean whiteListed = mForceAllHeads || isPackageWhitelisted(sbn.getPackageName());
         boolean isNoisy = (notification.defaults & Notification.DEFAULT_SOUND) != 0
                 || (notification.defaults & Notification.DEFAULT_VIBRATE) != 0
                 || notification.sound != null
@@ -2808,7 +3012,6 @@ public abstract class BaseStatusBar extends SystemUI implements
             }
         }
     }
-
     /**
      * Returns a context with the given theme applied or the original context if we fail to get a
      * themed context.

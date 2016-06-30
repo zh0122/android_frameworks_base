@@ -23,6 +23,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.provider.Settings;
 import android.view.LayoutInflater;
+import android.view.Gravity;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.AbsListView;
@@ -128,10 +129,7 @@ public class LocationTile extends QSTile<QSTile.BooleanState> {
 	boolean mQSCSwitch = Settings.System.getInt(mContext.getContentResolver(),
                 Settings.System.QS_COLOR_SWITCH, 0) == 1;
 
-        // Work around for bug 15916487: don't show location tile on top of lock screen. After the
-        // bug is fixed, this should be reverted to only hiding it on secure lock screens:
-        // state.visible = !(mKeyguard.isSecure() && mKeyguard.isShowing());
-        state.visible = !mKeyguard.isShowing();
+        state.visible = true;
         state.label = mContext.getString(getStateLabelRes(currentState));
 	 if (mQSCSwitch) {
         switch (currentState) {
@@ -283,11 +281,6 @@ public class LocationTile extends QSTile<QSTile.BooleanState> {
         }
 
         @Override
-        public StatusBarPanelCustomTile getCustomTile() {
-            return null;
-        }
-
-        @Override
         public void setToggleState(boolean state) {
             mController.setLocationEnabled(state);
             rebuildLocationList(state);
@@ -310,6 +303,7 @@ public class LocationTile extends QSTile<QSTile.BooleanState> {
             final ListView list = mDetails.getListView();
             list.setChoiceMode(AbsListView.CHOICE_MODE_SINGLE);
             list.setOnItemClickListener(this);
+            mDetails.setGravity(Gravity.CENTER_HORIZONTAL | Gravity.CENTER_VERTICAL);
 
             return mDetails;
         }

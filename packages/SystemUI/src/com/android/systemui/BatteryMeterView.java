@@ -48,6 +48,7 @@ import android.util.Log;
 import android.view.Gravity;
 import android.view.View;
 
+
 import android.provider.Settings;
 
 import com.android.systemui.statusbar.policy.BatteryController;
@@ -277,7 +278,6 @@ public class BatteryMeterView extends View implements DemoMode,
     protected void onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
         int width = MeasureSpec.getSize(widthMeasureSpec);
         int height = MeasureSpec.getSize(heightMeasureSpec);
-
         if (mMeterMode == BatteryMeterMode.BATTERY_METER_TEXT) {
             onSizeChanged(width, height, 0, 0); // Force a size changed event
         }
@@ -408,7 +408,7 @@ public class BatteryMeterView extends View implements DemoMode,
     }
 
     public void setDarkIntensity(float darkIntensity) {
-        if (mBatteryMeterDrawable != null) {
+	 if (mBatteryMeterDrawable != null) {
             mCurrentBackgroundColor = getBackgroundColor(darkIntensity);
             mCurrentFillColor = getFillColor(darkIntensity);
             mBatteryMeterDrawable.setDarkIntensity(mCurrentBackgroundColor, mCurrentFillColor);

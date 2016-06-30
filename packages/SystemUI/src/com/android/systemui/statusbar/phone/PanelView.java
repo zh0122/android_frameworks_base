@@ -674,8 +674,8 @@ public abstract class PanelView extends FrameLayout {
             }
             mUpdateExpandOnLayout = isFullyCollapsed();
             mFlingAnimationUtils.apply(animator, mExpandedHeight, target, vel, getHeight());
-            if (expandBecauseOfFalsing) {
-                animator.setDuration(350);
+            if (vel == 0) {
+                animator.setDuration(400);
             }
         } else {
             mFlingAnimationUtils.applyDismissing(animator, mExpandedHeight, target, vel,
@@ -761,7 +761,7 @@ public abstract class PanelView extends FrameLayout {
         }
     }
 
-    public void setExpandedHeightInternal(float h) {
+    public synchronized void setExpandedHeightInternal(float h) {
         float fhWithoutOverExpansion = getMaxPanelHeight() - getOverExpansionAmount();
         if (mHeightAnimator == null) {
             float overExpansionPixels = Math.max(0, h - fhWithoutOverExpansion);

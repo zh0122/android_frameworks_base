@@ -34,8 +34,6 @@ import com.android.keyguard.R;
 import com.android.keyguard.ViewMediatorCallback;
 import com.android.systemui.DejankUtils;
 
-import org.cyanogenmod.internal.util.CmLockPatternUtils;
-
 import static com.android.keyguard.KeyguardHostView.OnDismissAction;
 import static com.android.keyguard.KeyguardSecurityModel.SecurityMode;
 
@@ -51,7 +49,6 @@ public class KeyguardBouncer {
     private Context mContext;
     private ViewMediatorCallback mCallback;
     private LockPatternUtils mLockPatternUtils;
-    private CmLockPatternUtils mCmLockPatternUtils;
     private ViewGroup mContainer;
     private StatusBarWindowManager mWindowManager;
     private KeyguardHostView mKeyguardView;
@@ -76,7 +73,6 @@ public class KeyguardBouncer {
         mLockPatternUtils = lockPatternUtils;
         mContainer = container;
         mWindowManager = windowManager;
-        mCmLockPatternUtils = new CmLockPatternUtils(mContext);
         mPhoneStatusBar = phoneStatusBar;
         KeyguardUpdateMonitor.getInstance(mContext).registerCallback(mUpdateMonitorCallback);
     }
@@ -240,8 +236,7 @@ public class KeyguardBouncer {
             // "Bouncer first" mode currently only available to some security methods.
             else if ((mode == SecurityMode.Pattern || mode == SecurityMode.Password
                     || mode == SecurityMode.PIN) && (mLockPatternUtils != null &&
-                    mCmLockPatternUtils.shouldPassToSecurityView(
-                    KeyguardUpdateMonitor.getCurrentUser())))
+                    mLockPatternUtils.shouldPassToSecurityView(userId)))
                 return UNLOCK_SEQUENCE_BOUNCER_FIRST;
         }
         return UNLOCK_SEQUENCE_DEFAULT;
@@ -259,8 +254,7 @@ public class KeyguardBouncer {
             // "Bouncer first" mode currently only available to some security methods.
             else if ((mode == SecurityMode.Pattern || mode == SecurityMode.Password
                     || mode == SecurityMode.PIN) && (mLockPatternUtils != null &&
-                    mCmLockPatternUtils.shouldPassToSecurityView(
-                    KeyguardUpdateMonitor.getCurrentUser())))
+                    mLockPatternUtils.shouldPassToSecurityView(userId)))
                 return UNLOCK_SEQUENCE_BOUNCER_FIRST;
         }
         return UNLOCK_SEQUENCE_DEFAULT;

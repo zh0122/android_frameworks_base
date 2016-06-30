@@ -129,7 +129,6 @@ public interface IActivityManager extends IInterface {
             ActivityManager.TaskDescription description, Bitmap thumbnail) throws RemoteException;
     public Point getAppTaskThumbnailSize() throws RemoteException;
     public List<RunningTaskInfo> getTasks(int maxNum, int flags) throws RemoteException;
-    public boolean isPackageInForeground(String packageName) throws RemoteException;
     public List<ActivityManager.RecentTaskInfo> getRecentTasks(int maxNum,
             int flags, int userId) throws RemoteException;
     public ActivityManager.TaskThumbnail getTaskThumbnail(int taskId) throws RemoteException;
@@ -148,6 +147,7 @@ public interface IActivityManager extends IInterface {
     public int getFocusedStackId() throws RemoteException;
     public void registerTaskStackListener(ITaskStackListener listener) throws RemoteException;
     public int getTaskForActivity(IBinder token, boolean onlyRoot) throws RemoteException;
+    public IBinder getActivityForTask(int task, boolean onlyRoot) throws RemoteException;
     public ContentProviderHolder getContentProvider(IApplicationThread caller,
             String name, int userId, boolean stable) throws RemoteException;
     public ContentProviderHolder getContentProviderExternal(String name, int userId, IBinder token)
@@ -408,7 +408,8 @@ public interface IActivityManager extends IInterface {
 
     public long[] getProcessPss(int[] pids) throws RemoteException;
 
-    public void showBootMessage(CharSequence msg, boolean always) throws RemoteException;
+    public void showBootMessage(ApplicationInfo info, int current, int total,
+            boolean always) throws RemoteException;
 
     public void keyguardWaitingForActivityDrawn() throws RemoteException;
 
@@ -806,8 +807,8 @@ public interface IActivityManager extends IInterface {
     int GET_ACTIVITY_DISPLAY_ID_TRANSACTION = IBinder.FIRST_CALL_TRANSACTION+184;
     int DELETE_ACTIVITY_CONTAINER_TRANSACTION = IBinder.FIRST_CALL_TRANSACTION+185;
     int SET_PROCESS_MEMORY_TRIM_TRANSACTION = IBinder.FIRST_CALL_TRANSACTION+186;
-
-
+    /* FLOAT VIEW */
+    int GET_ACTIVITY_FOR_TASK_TRANSACTION = IBinder.FIRST_CALL_TRANSACTION+200;
     // Start of L transactions
     int GET_TAG_FOR_INTENT_SENDER_TRANSACTION = IBinder.FIRST_CALL_TRANSACTION+210;
     int START_USER_IN_BACKGROUND_TRANSACTION = IBinder.FIRST_CALL_TRANSACTION+211;
@@ -871,5 +872,4 @@ public interface IActivityManager extends IInterface {
             = IBinder.FIRST_CALL_TRANSACTION+299;
     int SHOW_ASSIST_FROM_ACTIVITY_TRANSACTION = IBinder.FIRST_CALL_TRANSACTION+300;
     int IS_ROOT_VOICE_INTERACTION_TRANSACTION = IBinder.FIRST_CALL_TRANSACTION+301;
-    int IS_PACKAGE_IN_FOREGROUND_TRANSACTION = IBinder.FIRST_CALL_TRANSACTION+302;
 }

@@ -107,7 +107,6 @@
     <!-- Automatic brightness enhancements -->
     <java-symbol type="integer" name="config_autoBrightnessBrighteningLightFastDebounce"/>
 
-
     <java-symbol type="string" name="high_definition_tag" />
 
     <java-symbol type="string" name="tethered_notification_no_device_message" />
@@ -135,7 +134,6 @@
     <java-symbol type="bool" name="config_use_stackblur" />
 
     <!-- Show battery fully charged notification -->
-    <java-symbol type="bool" name="config_showBatteryFullyChargedNotification" />
     <java-symbol type="string" name="notify_battery_fully_charged_title" />
     <java-symbol type="string" name="notify_battery_fully_charged_text" />
 

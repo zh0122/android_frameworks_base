@@ -786,7 +786,6 @@ public final class BatteryStatsHelper {
         }
     }
 
-
     private void loadDockStats() {
         if (mBatteryInfo == null) {
             return;

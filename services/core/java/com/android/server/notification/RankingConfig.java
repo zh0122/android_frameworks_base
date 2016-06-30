@@ -31,4 +31,5 @@ public interface RankingConfig {
     void setShowNotificationForPackageOnKeyguard(String packageName, int uid, int status);
 
     int getShowNotificationForPackageOnKeyguard(String packageName, int uid);
+
 }

@@ -1548,27 +1548,14 @@ public class NotificationManagerService extends SystemService {
         @Override
         public void setPackagePeekable(String pkg, int uid, boolean peekable) {
             checkCallerIsSystem();
+
             mRankingHelper.setPackagePeekable(pkg, uid, peekable);
-            savePolicyFile();
         }
 
         @Override
         public boolean getPackagePeekable(String pkg, int uid) {
             checkCallerIsSystem();
             return mRankingHelper.getPackagePeekable(pkg, uid);
-        }
-
-        @Override
-        public void setPackageKeyguard(String pkg, int uid, boolean keguard) {
-            checkCallerIsSystem();
-            mRankingHelper.setPackageKeyguard(pkg, uid, keguard);
-            savePolicyFile();
-        }
-
-        @Override
-        public boolean getPackageKeyguard(String pkg, int uid) {
-            enforceSystemOrSystemUI("INotificationManager.getPackageKeyguard");
-            return mRankingHelper.getPackageKeyguard(pkg, uid);
         }
 
         @Override
@@ -1582,6 +1569,20 @@ public class NotificationManagerService extends SystemService {
         public int getPackageVisibilityOverride(String pkg, int uid) {
             checkCallerIsSystem();
             return mRankingHelper.getPackageVisibilityOverride(pkg, uid);
+        }
+
+        @Override
+        public void setShowNotificationForPackageOnKeyguard(
+                String pkg, int uid, int status) {
+            checkCallerIsSystem();
+            mRankingHelper.setShowNotificationForPackageOnKeyguard(pkg, uid, status);
+            savePolicyFile();
+        }
+
+        @Override
+        public int getShowNotificationForPackageOnKeyguard(String pkg, int uid) {
+            enforceSystemOrSystemUI("INotificationManager.getShowNotificationForPackageOnKeyguard");
+            return mRankingHelper.getShowNotificationForPackageOnKeyguard(pkg, uid);
         }
 
         @Override

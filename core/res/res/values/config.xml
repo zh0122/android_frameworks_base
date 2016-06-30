@@ -900,7 +900,7 @@
 
     <!-- Display low battery warning when battery level dips to this value.
          Also, the battery stats are flushed to disk when we hit this level.  -->
-    <integer name="config_criticalBatteryWarningLevel">0</integer>
+    <integer name="config_criticalBatteryWarningLevel">5</integer>
 
     <!-- Shutdown if the battery temperature exceeds (this value * 0.1) Celsius. -->
     <integer name="config_shutdownBatteryTemperature">680</integer>
@@ -910,7 +910,7 @@
 
     <!-- Close low battery warning when battery level reaches the lowBatteryWarningLevel
          plus this -->
-    <integer name="config_lowBatteryCloseWarningBump">0</integer>
+    <integer name="config_lowBatteryCloseWarningBump">5</integer>
 
     <!-- Default color for notification LED. -->
     <color name="config_defaultNotificationColor">#ffffffff</color>
@@ -2494,7 +2494,7 @@
    <!-- Configuration to play sms ringtone during MO/MT call -->
    <bool name="config_sms_ringtone_incall">false</bool>
     <!-- IpReachability monitor enable/Disable -->
-    <bool translatable="false" name="config_wifi_ipreachability_monitor">false</bool>
+    <bool translatable="false" name="config_wifi_ipreachability_monitor">true</bool>
 
     <!-- Configuration that determines if ACTIVATE_REJECT_GGSN is to be treated as
          a permanent error -->
@@ -2578,9 +2578,6 @@
 
     <!-- Use alternative way to blur lockscreen -->
     <bool name="config_use_stackblur">false</bool>
-
-    <!-- Show battery fully charged notification -->
-    <bool name="config_showBatteryFullyChargedNotification">false</bool>
 
     <!-- Older rotation sensors are not setting event.timestamp correctly. Setting to
          true will use SystemClock.elapsedRealtimeNanos() to set timestamp. -->

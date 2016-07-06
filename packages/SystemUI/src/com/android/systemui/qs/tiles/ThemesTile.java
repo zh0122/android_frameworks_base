@@ -45,12 +45,13 @@ import cyanogenmod.app.StatusBarPanelCustomTile;
 import cyanogenmod.providers.ThemesContract;
 import cyanogenmod.themes.ThemeChangeRequest;
 import cyanogenmod.themes.ThemeManager;
+
 import org.cyanogenmod.internal.logging.CMMetricsLogger;
 
 /**
  * Quick settings tile: Themes mode
  **/
-public class ThemesTile extends QSTile<QSTile.BooleanState> implements ThemeManager.ThemeChangeListener ,ThemeManager.ThemeProcessingListener {
+public class ThemesTile extends QSTile<QSTile.BooleanState> implements ThemeManager.ThemeChangeListener {
 
     private enum Mode {ALL_THEMES, ICON_PACK, APP_THEME}
 
@@ -124,22 +125,7 @@ public class ThemesTile extends QSTile<QSTile.BooleanState> implements ThemeMana
     public void onProgress(int progress) {
 
     }
- 
-     @Override
-    public void onFinishedProcessing(final String pkgName) {
 
-        if (localI != i) {
-            mService.unregisterProcessingListener(this);
-            return;
-        }
-
-        // Log.d("ThemesTile", "onFinish");
-
-        if (mode == Mode.APP_THEME) {
-            showDetail(false);
-        }
-    }
-    
     @Override
     public void onFinish(boolean isSuccess) {
 

@@ -140,8 +140,6 @@ public class VolumeDialog {
     private int mCustomStrokeColor;
     private int mCustomStrokeThickness;
     private int mCustomCornerRadius;
-    private int mCustomDashWidth;
-    private int mCustomDashGap;
 
     public VolumeDialog(Context context, int windowType, VolumeDialogController controller,
                         ZenModeController zenModeController, Callback callback) {
@@ -1202,10 +1200,6 @@ public class VolumeDialog {
                     Settings.System.VOLUME_DIALOG_STROKE_THICKNESS, 4);
         mCustomCornerRadius = Settings.System.getInt(mContext.getContentResolver(),
                     Settings.System.VOLUME_DIALOG_CORNER_RADIUS, 2);
-        mCustomDashWidth = Settings.System.getInt(mContext.getContentResolver(),
-                    Settings.System.VOLUME_DIALOG_STROKE_DASH_WIDTH, 0);
-        mCustomDashGap = Settings.System.getInt(mContext.getContentResolver(),
-                    Settings.System.VOLUME_DIALOG_STROKE_DASH_GAP, 10);
 
         final GradientDrawable volumeDialogGd = new GradientDrawable();
 
@@ -1216,11 +1210,10 @@ public class VolumeDialog {
             mDialogView.setBackground(volumeDialogGd);
         } else if (mVolumeDialogStroke == 1) { // use accent color for border
             volumeDialogGd.setColor(mContext.getResources().getColor(R.color.system_primary_color));
-            volumeDialogGd.setStroke(mCustomStrokeThickness, mContext.getResources().getColor(R.color.system_accent_color),
-                    mCustomDashWidth, mCustomDashGap);
+            volumeDialogGd.setStroke(mCustomStrokeThickness, mContext.getResources().getColor(R.color.system_accent_color));
         } else if (mVolumeDialogStroke == 2) { // use custom border color
             volumeDialogGd.setColor(mContext.getResources().getColor(R.color.system_primary_color));
-            volumeDialogGd.setStroke(mCustomStrokeThickness, mCustomStrokeColor, mCustomDashWidth, mCustomDashGap);
+            volumeDialogGd.setStroke(mCustomStrokeThickness, mCustomStrokeColor);
         }
 
         if (mVolumeDialogStroke != 0) {

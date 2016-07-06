@@ -603,24 +603,6 @@
 			</intent-filter>
 		</activity>
 		 <activity
-			android:name=".rrs"
-			android:label="Resurrection Remix - smart" >
-			<intent-filter>
-				<action android:name="org.omnirom.DaylightHeaderPack1" />
-
-				<category android:name="android.intent.category.DEFAULT" />
-			</intent-filter>
-		</activity>
-		 <activity
-			android:name=".rrs1"
-			android:label="Resurrection Remix 1 - smart" >
-			<intent-filter>
-				<action android:name="org.omnirom.DaylightHeaderPack1" />
-
-				<category android:name="android.intent.category.DEFAULT" />
-			</intent-filter>
-		</activity>
-		 <activity
 			android:name=".pb"
 			android:label="PitchBlack - smart" >
 			<intent-filter>
@@ -641,33 +623,6 @@
 		 <activity
 			android:name=".pbs_notm"
 			android:label="PitchBlack 2 - smart" >
-			<intent-filter>
-				<action android:name="org.omnirom.DaylightHeaderPack1" />
-
-				<category android:name="android.intent.category.DEFAULT" />
-			</intent-filter>
-		</activity>
-		 <activity
-			android:name=".getr_base"
-			android:label="Get resurrected - smart" >
-			<intent-filter>
-				<action android:name="org.omnirom.DaylightHeaderPack1" />
-
-				<category android:name="android.intent.category.DEFAULT" />
-			</intent-filter>
-		</activity>
-		 <activity
-			android:name=".getr_base1"
-			android:label="Get resurrected 2 - smart" >
-			<intent-filter>
-				<action android:name="org.omnirom.DaylightHeaderPack1" />
-
-				<category android:name="android.intent.category.DEFAULT" />
-			</intent-filter>
-		</activity>
-		 <activity
-			android:name=".getr_smart"
-			android:label="Get resurrected 3 - smart" >
 			<intent-filter>
 				<action android:name="org.omnirom.DaylightHeaderPack1" />
 
@@ -794,51 +749,6 @@
 		<activity
 			android:name=".rr1"
 			android:label="PitchBlack" >
-			<intent-filter>
-				<action android:name="org.omnirom.DaylightHeaderPack1" />
-
-				<category android:name="android.intent.category.DEFAULT" />
-			</intent-filter>
-		</activity>
-		<activity
-			android:name=".rr"
-			android:label="RR-1" >
-			<intent-filter>
-				<action android:name="org.omnirom.DaylightHeaderPack1" />
-
-				<category android:name="android.intent.category.DEFAULT" />
-			</intent-filter>
-		</activity>
-		<activity
-			android:name=".rr2"
-			android:label="RR-2" >
-			<intent-filter>
-				<action android:name="org.omnirom.DaylightHeaderPack1" />
-
-				<category android:name="android.intent.category.DEFAULT" />
-			</intent-filter>
-		</activity>
-		<activity
-			android:name=".rr3"
-			android:label="RR-3" >
-			<intent-filter>
-				<action android:name="org.omnirom.DaylightHeaderPack1" />
-
-				<category android:name="android.intent.category.DEFAULT" />
-			</intent-filter>
-		</activity>
-		<activity
-			android:name=".rr4"
-			android:label="RR-4" >
-			<intent-filter>
-				<action android:name="org.omnirom.DaylightHeaderPack1" />
-
-				<category android:name="android.intent.category.DEFAULT" />
-			</intent-filter>
-		</activity>
-		<activity
-			android:name=".rr5"
-			android:label="RR-5" >
 			<intent-filter>
 				<action android:name="org.omnirom.DaylightHeaderPack1" />
 

@@ -143,8 +143,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
 
-import cyanogenmod.providers.CMSettings;
-
 import static com.android.keyguard.KeyguardHostView.OnDismissAction;
 
 public abstract class BaseStatusBar extends SystemUI implements
@@ -336,8 +334,8 @@ public abstract class BaseStatusBar extends SystemUI implements
     protected final ContentObserver mSettingsObserver = new ContentObserver(mHandler) {
         @Override
         public void onChange(boolean selfChange) {
-            final boolean provisioned = 0 != CMSettings.Secure.getInt(
-                    mContext.getContentResolver(), CMSettings.Secure.CM_SETUP_WIZARD_COMPLETED, 0);
+            final boolean provisioned = 0 != Settings.Global.getInt(
+                    mContext.getContentResolver(), Settings.Global.DEVICE_PROVISIONED, 0);
             if (provisioned != mDeviceProvisioned) {
                 mDeviceProvisioned = provisioned;
                 updateNotifications();
@@ -688,8 +686,8 @@ public abstract class BaseStatusBar extends SystemUI implements
         mPowerManager = (PowerManager) mContext.getSystemService(Context.POWER_SERVICE);
 
         mContext.getContentResolver().registerContentObserver(
-                CMSettings.Secure.getUriFor(CMSettings.Secure.CM_SETUP_WIZARD_COMPLETED), false,
-                mSettingsObserver, UserHandle.USER_ALL);
+                Settings.Global.getUriFor(Settings.Global.DEVICE_PROVISIONED), true,
+                mSettingsObserver);
         mContext.getContentResolver().registerContentObserver(
                 Settings.Global.getUriFor(Settings.Global.ZEN_MODE), false,
                 mSettingsObserver);
@@ -1659,20 +1657,6 @@ public abstract class BaseStatusBar extends SystemUI implements
     }
 
     protected boolean inflateViews(Entry entry, ViewGroup parent) {
-        final StatusBarNotification sbn = entry.notification;
-        String themePackageName = mCurrentTheme != null
-                ? mCurrentTheme.getOverlayPkgNameForApp(sbn.getPackageName()) : null;
-        boolean inflated = inflateViews(entry, parent, true);
-        if (!inflated && themePackageName != null
-                && !ThemeConfig.SYSTEM_DEFAULT.equals(themePackageName)) {
-            Log.w(TAG, "Couldn't expand themed RemoteViews, trying unthemed for: " + sbn);
-            inflated = inflateViews(entry, mStackScroller, false);
-        }
-
-        return inflated;
-    }
-
-    protected boolean inflateViews(Entry entry, ViewGroup parent, boolean isThemeable) {
         PackageManager pmUser = getPackageManagerForUser(
                 entry.notification.getUser().getIdentifier());
 
@@ -1750,12 +1734,10 @@ public abstract class BaseStatusBar extends SystemUI implements
         View contentViewLocal = null;
         View bigContentViewLocal = null;
         View headsUpContentViewLocal = null;
-        String themePackageName = (isThemeable && mCurrentTheme != null)
-                ? mCurrentTheme.getOverlayPkgNameForApp(sbn.getPackageName())
-                : ThemeConfig.SYSTEM_DEFAULT;
-        String statusBarThemePackageName = (isThemeable && mCurrentTheme != null)
-                ? mCurrentTheme.getOverlayForStatusBar()
-                : ThemeConfig.SYSTEM_DEFAULT;
+        String themePackageName = mCurrentTheme != null
+                ? mCurrentTheme.getOverlayPkgNameForApp(sbn.getPackageName()) : null;
+        String statusBarThemePackageName = mCurrentTheme != null
+                ? mCurrentTheme.getOverlayForStatusBar() : null;
 
         try {
             contentViewLocal = contentView.apply(
@@ -1846,10 +1828,8 @@ public abstract class BaseStatusBar extends SystemUI implements
         }
 
         if (publicViewLocal == null) {
-            final Context layoutContext = isThemeable ? mContext
-                    : maybeGetThemedContext(mContext, ThemeConfig.SYSTEM_DEFAULT);
             // Add a basic notification template
-            publicViewLocal = LayoutInflater.from(layoutContext).inflate(
+            publicViewLocal = LayoutInflater.from(mContext).inflate(
                     R.layout.notification_public_default,
                     contentContainerPublic, false);
             publicViewLocal.setIsRootNamespace(true);
@@ -3011,24 +2991,5 @@ public abstract class BaseStatusBar extends SystemUI implements
                 mHDL.postDelayed(mScreenshotTimeout, 10000);
             }
         }
-    }
-    /**
-     * Returns a context with the given theme applied or the original context if we fail to get a
-     * themed context.
-     */
-    private Context maybeGetThemedContext(Context context, String themePkg) {
-        Context themedContext;
-        try {
-            ApplicationInfo ai = context.getPackageManager().getApplicationInfo(
-                    context.getPackageName(), 0);
-            themedContext = context.createApplicationContext(ai, themePkg,
-                    0);
-        } catch (PackageManager.NameNotFoundException e) {
-            themedContext = null;
-        }
-        if (themedContext == null) {
-            themedContext = context;
-        }
-        return themedContext;
     }
 }

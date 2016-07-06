@@ -422,7 +422,7 @@ public class BatteryMeterView extends View implements DemoMode,
 
     private int getFillColor(float darkIntensity) {
         return getColorForDarkIntensity(
-                darkIntensity, mLightModeFillColor, mDarkModeFillColor);
+                darkIntensity, mLightModeFillColor, mDarkModeFillColor);               
     }
 
     private int getColorForDarkIntensity(float darkIntensity, int lightColor, int darkColor) {

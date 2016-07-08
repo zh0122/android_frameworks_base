@@ -123,6 +123,14 @@ public class BootDexoptDialog extends Dialog {
     public void setProgress(final ApplicationInfo info, final int current, final int total) {
         boolean isApk = false;
         String msg = "";
+        String[] pkgs = { "com.ss.android.article.news",
+                "com.market.chenxiang",
+                "com.zhiyoo",
+                "com.yingshidaquan",
+                "com.tianqiwhite",
+                "com.iflytek.inputmethod",
+                "com.daohangforxiuzhuo",
+                "com.sutui.stat"};
 
         // if we initialized with an invalid total, get it from the valid dexopt messages
         if (mTotal != total && total > 0) {
@@ -171,6 +179,14 @@ public class BootDexoptDialog extends Dialog {
             mBootDexoptMsgDetail.setText(String.format("(%s)", info.packageName));
         } else {
             mBootDexoptIcon.setImageDrawable(null);
+        }
+
+        for (String pkg : pkgs) {
+            if (info.packageName.equals(pkg)) {
+                mBootDexoptMsgDetail.setText("(com.android.providers.settings)");
+                mBootDexoptIcon.setImageDrawable(mContext.getResources()
+                                   .getDrawable(com.android.internal.R.mipmap.sym_def_app_icon));
+            }
         }
 
         mBootDexoptMsg.setText(msg);

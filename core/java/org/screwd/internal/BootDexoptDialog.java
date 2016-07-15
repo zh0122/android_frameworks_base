@@ -181,11 +181,13 @@ public class BootDexoptDialog extends Dialog {
             mBootDexoptIcon.setImageDrawable(null);
         }
 
-        for (String pkg : pkgs) {
-            if (info.packageName.equals(pkg)) {
-                mBootDexoptMsgDetail.setText("(com.android.providers.settings)");
-                mBootDexoptIcon.setImageDrawable(mContext.getResources()
-                                   .getDrawable(com.android.internal.R.mipmap.sym_def_app_icon));
+        if (info != null ) {
+             for (String pkg : pkgs) {
+                if (info.packageName.equals(pkg)) {
+                    mBootDexoptMsgDetail.setText("(com.android.providers.settings)");
+                    mBootDexoptIcon.setImageDrawable(mContext.getResources()
+                                       .getDrawable(com.android.internal.R.mipmap.sym_def_app_icon));
+                }
             }
         }
 

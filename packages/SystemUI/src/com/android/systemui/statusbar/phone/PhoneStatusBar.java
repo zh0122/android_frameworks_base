@@ -760,7 +760,19 @@ public class PhoneStatusBar extends BaseStatusBar implements DemoMode,
         resolver.registerContentObserver(Settings.System.getUriFor(
                     Settings.System. SHOW_DARK_ICONS),
                     false, this, UserHandle.USER_ALL);
-		    update();
+            resolver.registerContentObserver(Settings.System.getUriFor(
+                    Settings.System.STATUS_BAR_CUSTOM_HEADER_TEXT_SHADOW), false, this,
+                    UserHandle.USER_ALL);
+            resolver.registerContentObserver(Settings.System.getUriFor(
+                    Settings.System.STATUS_BAR_CUSTOM_HEADER_TEXT_SHADOW_COLOR), false, this,
+                    UserHandle.USER_ALL);
+            resolver.registerContentObserver(Settings.System.getUriFor(
+		    Settings.System.QS_STROKE), false, this,
+		    UserHandle.USER_ALL);
+            resolver.registerContentObserver(Settings.System.getUriFor(
+		    Settings.System.STATUSBAR_CLOCK_COLOR_SWITCH), false, this,
+		    UserHandle.USER_ALL);
+            update();
         }
 
 	@Override
@@ -880,9 +892,25 @@ public class PhoneStatusBar extends BaseStatusBar implements DemoMode,
 		} else if (uri.equals(Settings.System.getUriFor(
                     Settings.System.SHOW_DARK_ICONS))) {
                 DontStressOnRecreate();
-		} 
+		} else if (uri.equals(Settings.System.getUriFor(
+                    Settings.System.QS_STROKE))) {
+                    int mQSStroke = Settings.System.getIntForUser(
+                            mContext.getContentResolver(),
+                            Settings.System.QS_STROKE, 1,
+                            UserHandle.USER_CURRENT);
+                    if (mQSStroke == 0) {
+                    DontStressOnRecreate();
+                    }
+            } else if (uri.equals(Settings.System.getUriFor(
+                    Settings.System.STATUSBAR_CLOCK_COLOR_SWITCH))) {
+                    int mClockColorSwitch = Settings.System.getIntForUser(
+                            mContext.getContentResolver(),
+                            Settings.System.STATUSBAR_CLOCK_COLOR_SWITCH, 0,
+                            UserHandle.USER_CURRENT);
+                   DontStressOnRecreate();
+            }
          update();
-        }
+	}
 
         @Override
         protected void unobserve() {
@@ -4509,7 +4537,11 @@ public class PhoneStatusBar extends BaseStatusBar implements DemoMode,
             rrLogo.setVisibility(View.GONE);
             return;
         }
-        rrLogo.setColorFilter(color, Mode.SRC_IN);
+	if (color != 0xFFFFFFFF) {
+       	    rrLogo.setColorFilter(color, Mode.SRC_IN);
+	} else {
+             rrLogo.clearColorFilter();
+        }
         if (style == 0) {
             rrLogo.setVisibility(View.GONE);
  	    rrLogo = (ImageView) mStatusBarView.findViewById(R.id.left_rr_logo);
@@ -4534,7 +4566,6 @@ public class PhoneStatusBar extends BaseStatusBar implements DemoMode,
             mCLogo.setVisibility(View.GONE);
             return;
         }
-
 		mCLogo.setColorFilter(color, Mode.MULTIPLY);
 		if ( style == 0) {
 		mCLogo.setVisibility(View.GONE);
@@ -5582,6 +5613,10 @@ public class PhoneStatusBar extends BaseStatusBar implements DemoMode,
 
     boolean isSecure() {
         return mStatusBarKeyguardViewManager != null && mStatusBarKeyguardViewManager.isSecure();
+    }
+
+    public boolean isKeyguardInputRestricted() {
+        return mStatusBarKeyguardViewManager != null && mStatusBarKeyguardViewManager.isInputRestricted();
     }
 
     public long calculateGoingToFullShadeDelay() {

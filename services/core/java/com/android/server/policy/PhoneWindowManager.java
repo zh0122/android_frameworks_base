@@ -22,8 +22,6 @@ import android.app.ActivityManagerInternal.SleepToken;
 import android.app.ActivityManagerNative;
 import android.app.AppOpsManager;
 import android.app.IUiModeManager;
-import android.app.KeyguardManager;
-import android.app.ProgressDialog;
 import android.app.SearchManager;
 import android.app.StatusBarManager;
 import android.app.UiModeManager;
@@ -145,9 +143,10 @@ import com.android.internal.utils.du.DUSystemReceiver;
 import com.android.internal.widget.PointerLocationView;
 import com.android.server.GestureLauncherService;
 import com.android.server.LocalServices;
-import org.screwd.internal.BootDexoptDialog;
 import com.android.server.policy.keyguard.KeyguardServiceDelegate;
 import com.android.server.policy.keyguard.KeyguardServiceDelegate.DrawnListener;
+
+import org.cyanogenmod.internal.BootDexoptDialog;
 
 import java.io.File;
 import java.io.FileReader;
@@ -7512,28 +7511,17 @@ public class PhoneWindowManager implements WindowManagerPolicy {
     }
 
     BootDexoptDialog mBootMsgDialog = null;
-    /**
-     * name of package currently being dex optimized
-     * as shown through this.showBootMessage(msg, always);
-     */
-    static String currentPackageName;
-    public void setPackageName(String pkgName) {
-        if (pkgName == null) {
-            pkgName = "stop.looking.at.me.swan";
-        }
-        this.currentPackageName = pkgName;
-    }
 
     /** {@inheritDoc} */
     @Override
-    public void showBootMessage(final ApplicationInfo info, final int current, final int total,
-            final boolean always) {
+    public void updateBootProgress(final int stage, final ApplicationInfo optimizedApp,
+            final int currentAppPos, final int totalAppCount) {
         mHandler.post(new Runnable() {
             @Override public void run() {
                 if (mBootMsgDialog == null) {
-                   mBootMsgDialog = BootDexoptDialog.create(mContext);
+                    mBootMsgDialog = BootDexoptDialog.create(mContext);
                 }
-                mBootMsgDialog.setProgress(info, current, total);
+                mBootMsgDialog.setProgress(stage, optimizedApp, currentAppPos, totalAppCount);
             }
         });
     }

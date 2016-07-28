@@ -1167,15 +1167,10 @@ public interface WindowManagerPolicy {
     public void systemBooted();
 
     /**
-     * name of package being worked on during boot time message
+     * Update UI for boot-up progress.
      */
-    public void setPackageName(String pkgName);
-
-    /**
-     * Show boot time message to the user.
-     */
-    public void showBootMessage(final ApplicationInfo info, final int current, final int total,
-            final boolean always);
+    public void updateBootProgress(final int stage, final ApplicationInfo optimizedApp,
+            final int currentAppPos, final int totalAppCount);
 
     /**
      * Hide the UI for showing boot messages, never to be displayed again.

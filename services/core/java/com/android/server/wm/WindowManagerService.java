@@ -6075,15 +6075,18 @@ public class WindowManagerService extends IWindowManager.Stub
         return true;
     }
 
-    public void showBootMessage(final ApplicationInfo info, final int current, final int total,
-            final boolean always) {
+    public void updateBootProgress(final int stage, final ApplicationInfo optimizedApp,
+            final int currentAppPos, final int totalAppCount, final boolean always) {
         boolean first = false;
         synchronized(mWindowMap) {
             if (DEBUG_BOOT) {
                 RuntimeException here = new RuntimeException("here");
                 here.fillInStackTrace();
-                Slog.i(TAG, "showBootMessage: info=" + (info != null ? info.toString() : null)
-                        + " current=" + current + " total=" + total + " always=" + always
+                Slog.i(TAG, "updateBootProgress: stage=" + stage
+                        + " optimizedApp=" + optimizedApp
+                        + " currentAppPos=" + currentAppPos
+                        + " totalAppCount=" + totalAppCount
+                        + " always=" + always
                         + " mAllowBootMessages=" + mAllowBootMessages
                         + " mShowingBootMessages=" + mShowingBootMessages
                         + " mSystemBooted=" + mSystemBooted, here);
@@ -6101,7 +6104,7 @@ public class WindowManagerService extends IWindowManager.Stub
                 return;
             }
             mShowingBootMessages = true;
-            mPolicy.showBootMessage(info, current, total, always);
+            mPolicy.updateBootProgress(stage, optimizedApp, currentAppPos, totalAppCount);
         }
         if (first) {
             performEnableScreen();

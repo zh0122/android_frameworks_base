@@ -44,6 +44,7 @@ import android.app.ApplicationThreadNative;
 import android.app.BroadcastOptions;
 import android.app.IActivityContainer;
 import android.app.IActivityContainerCallback;
+import android.app.IActivityManager;
 import android.app.IAppTask;
 import android.app.ITaskStackListener;
 import android.app.ProfilerInfo;
@@ -6567,13 +6568,14 @@ public final class ActivityManagerService extends ActivityManagerNative
     }
 
     @Override
-    public void showBootMessage(final ApplicationInfo info, final int current,
-            final int total, final boolean always) {
+    public void updateBootProgress(final int stage, final ApplicationInfo optimizedApp,
+            final int currentAppPos, final int totalAppCount, final boolean always) {
         if (Binder.getCallingUid() != Process.myUid()) {
             // These days only the core system can call this, so apps can't get in
             // the way of what we show about running them.
         }
-        mWindowManager.showBootMessage(info, current, total, always);
+        mWindowManager.updateBootProgress(stage, optimizedApp,
+                currentAppPos, totalAppCount, always);
     }
 
     @Override
@@ -12004,8 +12006,8 @@ public final class ActivityManagerService extends ActivityManagerNative
                 intent.setComponent(comp);
                 doneReceivers.add(comp);
                 lastRi = curRi;
-                showBootMessage(ai.applicationInfo, Integer.MIN_VALUE + 2, Integer.MIN_VALUE + 2,
-                        false);
+                updateBootProgress(IActivityManager.BOOT_STAGE_PREPARING_APPS,
+                        ai.applicationInfo, 0, 0, false);
             }
             Slog.i(TAG, "Pre-boot of " + intent.getComponent().toShortString()
                     + " for user " + users[curUser]);
@@ -12128,7 +12130,8 @@ public final class ActivityManagerService extends ActivityManagerNative
                         synchronized (ActivityManagerService.this) {
                             mDidUpdate = true;
                         }
-                        showBootMessage(null, Integer.MIN_VALUE + 3, Integer.MIN_VALUE + 3, false);
+                        updateBootProgress(IActivityManager.BOOT_STAGE_COMPLETE,
+                                null, 0, 0, false);
                         writeLastDonePreBootReceivers(doneReceivers);
                         systemReady(goingCallback);
                     }

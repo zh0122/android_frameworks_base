@@ -42,7 +42,7 @@
   <string name="app_killed_message">已終止應用程式</string>
   <!-- On The Go -->
   <string name="onthego_notif_ticker">On-The-Go 已啟動</string>
-  <string name="onthego_notif_title">On-The-Go 正在運行</string>
+  <string name="onthego_notif_title">正在使用 On-The-Go</string>
   <string name="onthego_notif_stop">停止</string>
   <string name="onthego_notif_options">選項</string>
   <string name="onthego_notif_error">無法啟動 On-The-Go</string>
@@ -60,8 +60,8 @@
   <string name="quick_settings_screenshot_label">擷取螢幕畫面</string>
   <!-- Expanded desktop tile -->
   <string name="quick_settings_expanded_desktop_label">擴展桌面</string>
-  <string name="quick_settings_expanded_desktop">已擴展</string>
-  <string name="quick_settings_expanded_desktop_off">一般</string>
+  <string name="quick_settings_expanded_desktop">擴展</string>
+  <string name="quick_settings_expanded_desktop_off">正常</string>
   <string name="quick_settings_expanded_desktop_detail_title">擴展桌面模式</string>
   <string name="quick_settings_expanded_hide_status">隱藏狀態列</string>
   <string name="quick_settings_expanded_hide_navigation">隱藏導覽列</string>
@@ -226,4 +226,18 @@
   <!-- Content description of the visualizer tile in quick settings (not shown on the screen). [CHAR LIMIT=NONE] -->
   <string name="accessibility_quick_settings_visualizer">音樂視覺化工具。</string>
   <string name="pulse_toast_message">啟用「律動」時音樂視覺化圖塊將無法運作</string>
+  <string name="recents_custom_android_n">CLEAR ALL</string>
+  <!-- Slim recents app sidebar queue app toast -->
+  <string name="toast_recents_queue_app">Launch %s after closing recents</string>
+  <string name="toast_recents_cancel_queued_app">Cancelled app launch</string>
+  <!-- Content description of the halo button in the notification panel for accessibility (not shown on the screen). [CHAR LIMIT=NONE] -->
+  <string name="accessibility_halo">Create notification halo.</string>
+  <!-- HALO -->
+  <string name="halo_dismiss">Dismiss notification</string>
+  <string name="halo_hide">Hide</string>
+  <string name="halo_clear_all">Dismiss all notifications</string>
+  <string name="halo_silence">Hide &amp; silence until woken</string>
+  <string name="halo_tutorial1">This is HALO</string>
+  <string name="halo_tutorial2">Move me: double tap &amp; drag</string>
+  <string name="halo_tutorial3">Browse tasks: Horizontal drag</string>
 </resources>

@@ -101,12 +101,14 @@ public class PhoneStatusBarPolicy implements Callback {
     private final SuController mSuController;
     private boolean mSuIndicatorVisible;
     private int mHeadsetIconVisible;
+    private boolean mShowBluetoothBattery;
 
     // Assume it's all good unless we hear otherwise.  We don't always seem
     // to get broadcasts that it *is* there.
     IccCardConstants.State mSimState = IccCardConstants.State.READY;
 
     private boolean mZenVisible;
+    private boolean mShowZenIcon;
     private boolean mVolumeVisible;
     private boolean mCurrentUserSetup;
     private Float mBluetoothBatteryLevel = null;
@@ -202,6 +204,12 @@ public class PhoneStatusBarPolicy implements Callback {
         //Update initial tty mode
         updateTTYMode();
 
+        //Bluetooth icon
+        mBTIconObserver.onChange(true);
+        mContext.getContentResolver().registerContentObserver(
+                Settings.System.getUriFor(Settings.System.BLUETOOTH_SHOW_BATTERY),
+                false, mBTIconObserver);
+
         // Alarm clock
         mService.setIcon(SLOT_ALARM_CLOCK, R.drawable.stat_sys_alarm, 0, null);
         mService.setIconVisibility(SLOT_ALARM_CLOCK, false);
@@ -214,6 +222,9 @@ public class PhoneStatusBarPolicy implements Callback {
                 false, mSettingsObserver);
         mContext.getContentResolver().registerContentObserver(
                 Settings.System.getUriFor(Settings.System.SHOW_HEADSET_ICON),
+                false, mSettingsObserver);
+        mContext.getContentResolver().registerContentObserver(
+                Settings.System.getUriFor(Settings.System.SHOW_ZEN_ICON),
                 false, mSettingsObserver);
 
         // zen
@@ -263,6 +274,10 @@ public class PhoneStatusBarPolicy implements Callback {
             updateAlarm();
             updateSu();
 
+            mShowZenIcon = Settings.System.getInt(mContext.getContentResolver(),
+                    Settings.System.SHOW_ZEN_ICON, 1) == 1;
+            updateVolumeZen();
+
             mHeadsetIconVisible = Settings.System.getInt(mContext.getContentResolver(),
                     Settings.System.SHOW_HEADSET_ICON, 1);
             Intent mHeadsetIntent = new Intent();
@@ -275,6 +290,20 @@ public class PhoneStatusBarPolicy implements Callback {
             if (am1.isWiredHeadsetOn()) {
                 updateHeadset(mHeadsetIntent);
             }
+        }
+
+        @Override
+        public void onChange(boolean selfChange) {
+            onChange(selfChange, null);
+        }
+    };
+
+    private ContentObserver mBTIconObserver = new ContentObserver(null) {
+        @Override
+        public void onChange(boolean selfChange, Uri uri) {
+            mShowBluetoothBattery = Settings.System.getInt(mContext.getContentResolver(),
+                    Settings.System.BLUETOOTH_SHOW_BATTERY, 0) == 1;
+            updateBluetooth();
         }
 
         @Override
@@ -377,11 +406,14 @@ public class PhoneStatusBarPolicy implements Callback {
             volumeDescription = mContext.getString(R.string.accessibility_ringer_vibrate);
         }
 
-        if (zenVisible) {
+        if (zenVisible && mShowZenIcon) {
             mService.setIcon(SLOT_ZEN, zenIconId, 0, zenDescription);
         }
+        if (zenVisible && !mShowZenIcon) {
+            mService.setIconVisibility(SLOT_ZEN, false);
+        }
         if (zenVisible != mZenVisible) {
-            mService.setIconVisibility(SLOT_ZEN, zenVisible);
+            mService.setIconVisibility(SLOT_ZEN, (zenVisible && mShowZenIcon));
             mZenVisible = zenVisible;
         }
 
@@ -434,9 +466,9 @@ public class PhoneStatusBarPolicy implements Callback {
         if (mBluetooth != null) {
             bluetoothEnabled = mBluetooth.isBluetoothEnabled();
             if (mBluetooth.isBluetoothConnected()) {
-                if (mBluetoothBatteryLevel == null) {
+                if (mBluetoothBatteryLevel == null && !mShowBluetoothBattery) {
                     iconId = R.drawable.stat_sys_data_bluetooth_connected;
-                } else {
+                } else if (mBluetoothBatteryLevel != null && mShowBluetoothBattery) {
                     if (mBluetoothBatteryLevel<=0.15f) {
                         iconId = R.drawable.stat_sys_data_bluetooth_connected_battery_1;
                     } else if (mBluetoothBatteryLevel<=0.375f) {
@@ -458,6 +490,7 @@ public class PhoneStatusBarPolicy implements Callback {
         mService.setIcon(SLOT_BLUETOOTH, iconId, 0, contentDescription);
         mService.setIconVisibility(SLOT_BLUETOOTH, bluetoothEnabled);
     }
+
 
     private final void updateTTY(Intent intent) {
         int currentTtyMode = intent.getIntExtra(TelecomManager.EXTRA_CURRENT_TTY_MODE,

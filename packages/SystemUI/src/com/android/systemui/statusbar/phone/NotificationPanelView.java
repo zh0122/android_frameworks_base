@@ -336,6 +336,10 @@ public class NotificationPanelView extends PanelView implements
     private int mCustomDashGap;
 
     // RR panel logo
+    private ImageView mRRPanelLogo;
+    private int mQSPanelLogo;
+    private int mQSPanelLogoColor;
+    private int mQSPanelLogoAlpha;
 
     // Used to identify whether showUnlock() can dismiss the keyguard
     // or not.

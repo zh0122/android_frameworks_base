@@ -76,9 +76,11 @@ public class KeyguardIndicationController {
     private boolean mPowerCharged;
     private int mChargingSpeed;
     private int mChargingCurrent;
+    private boolean mShowChargingCurrent;
     private String mMessageToShowOnScreenOn;
     private boolean mShowcurrent;
     private IndicationDirection mIndicationDirection;
+    private boolean mScreenOnHintsEnabled;
 
     public KeyguardIndicationController(Context context, KeyguardIndicationTextView textView,
                                         LockIcon lockIcon) {
@@ -90,6 +92,7 @@ public class KeyguardIndicationController {
         Resources res = context.getResources();
         mSlowThreshold = res.getInteger(R.integer.config_chargingSlowlyThreshold);
         mFastThreshold = res.getInteger(R.integer.config_chargingFastThreshold);
+        mScreenOnHintsEnabled = res.getBoolean(R.bool.config_showScreenOnLockScreenHints);
 
 
         mBatteryInfo = IBatteryStats.Stub.asInterface(
@@ -192,8 +195,9 @@ public class KeyguardIndicationController {
             final int color = computeColor();
             mTextView.switchIndication(computeIndication());
             mTextView.setTextColor(color);
-            // pad the bottom using ic_empty_space to keep text vertically aligned
-            int top = 0, bottom = R.drawable.ic_empty_space, left = 0, right = 0;
+            int top = 0, left = 0, right = 0;
+            // pad the bottom using ic_empty_space to keep text vertically aligned if needed
+            int bottom = mScreenOnHintsEnabled ? R.drawable.ic_empty_space : 0;
             switch (mIndicationDirection) {
                 case UP:
                     top = R.drawable.ic_keyboard_arrow_up;
@@ -273,28 +277,20 @@ public class KeyguardIndicationController {
         }
 
         String chargingCurrent = "";
-
-        if (mChargingCurrent != 0) {
-            chargingCurrent = "\n" + (mChargingCurrent / 1000) + "mA/h";
+        mShowChargingCurrent = Settings.System.getIntForUser(mContext.getContentResolver(),
+            Settings.System.LOCK_SCREEN_SHOW_CURRENT, 0, UserHandle.USER_CURRENT) == 1;
+        if (mChargingCurrent != 0 && mShowChargingCurrent) {
+            chargingCurrent = "\n" + "Max " + (mChargingCurrent / 1000) + "mA/h";
         }
-	mShowcurrent = Settings.System.getInt(mContext.getContentResolver(),
-                Settings.System.LOCK_SCREEN_SHOW_CURRENT, 0) == 1;
+
         if (hasChargingTime) {
             String chargingTimeFormatted = Formatter.formatShortElapsedTimeRoundingUpToMinutes(
                     mContext, chargingTimeRemaining);
-            if (mShowcurrent) {        
             String chargingText = mContext.getResources().getString(chargingId, chargingTimeFormatted);
             return chargingText + chargingCurrent;
-            } else {
-            return mContext.getResources().getString(chargingId, chargingTimeFormatted);
-            }
         } else {
-	    if (mShowcurrent) {
             String chargingText = mContext.getResources().getString(chargingId);
             return chargingText + chargingCurrent;
-            } else {
-            return mContext.getResources().getString(chargingId);
-            }
         }
     }
 

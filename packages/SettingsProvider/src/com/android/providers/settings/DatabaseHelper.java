@@ -2606,6 +2606,13 @@ class DatabaseHelper extends SQLiteOpenHelper {
             loadIntegerSetting(stmt, Settings.System.POINTER_SPEED,
                     R.integer.def_pointer_speed);
 
+            // SystemUI Blur Settings
+            loadSetting(stmt, Settings.System.STATUS_BAR_EXPANDED_ENABLED_PREFERENCE_KEY, 1);
+            loadSetting(stmt, Settings.System.BLUR_SCALE_PREFERENCE_KEY, 6);
+            loadSetting(stmt, Settings.System.BLUR_RADIUS_PREFERENCE_KEY, 1);
+            loadSetting(stmt, Settings.System.TRANSLUCENT_HEADER_PREFERENCE_KEY, 1);
+            loadSetting(stmt, Settings.System.TRANSLUCENT_QUICK_SETTINGS_PREFERENCE_KEY, 1);
+
             /*
              * IMPORTANT: Do not add any more upgrade steps here as the global,
              * secure, and system settings are no longer stored in a database

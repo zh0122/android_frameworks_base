@@ -20,9 +20,9 @@
 -->
 <resources xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">
   <!-- Battery Saver Dimss -->
-  <string name="battery_saver_dismiss_title">खारिज करें</string>
-  <string name="battery_saver_notification_action_text_short">बंद करो</string>
-  <string name="gestures_message">यहाँ इशारा आकर्षित करें</string>
+  <string name="battery_saver_dismiss_title">Dismiss</string>
+  <string name="battery_saver_notification_action_text_short">Turn off</string>
+  <string name="gestures_message">Draw gesture here</string>
   <!-- App circle sidebar -->
   <string name="app_float_maximize_item_title">बड़ा करें</string>
   <string name="app_float_item_title">Float view</string>
@@ -188,9 +188,9 @@
     (not shown on the screen). [CHAR LIMIT=NONE] -->
   <string name="accessibility_app_picker">Application picker</string>
   <!-- Sound QS Tile -->
-  <string name="quick_settings_sound_label">Sound</string>
-  <string name="quick_settings_sound_ring">Ring</string>
-  <string name="quick_settings_sound_vibrate">Vibrate</string>
+  <string name="quick_settings_sound_label">ध्वनि</string>
+  <string name="quick_settings_sound_ring">रिंग</string>
+  <string name="quick_settings_sound_vibrate">वाइब्रेट</string>
   <string name="quick_settings_sound_silent">Silent</string>
   <!-- headset icon switch -->
   <string name="status_bar_headset">Wired headset</string>

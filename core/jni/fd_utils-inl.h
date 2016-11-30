@@ -35,6 +35,8 @@
 #include "JNIHelp.h"
 #include "ScopedPrimitiveArray.h"
 
+#include <fd_utils-inl-extra.h>
+
 // Whitelist of open paths that the zygote is allowed to keep open.
 //
 // In addition to the paths listed here, all files ending with
@@ -58,7 +60,10 @@ static const char* kPathWhitelist[] = {
   "/dev/ion",
   "@netlink@",
   "/system/framework/org.cyanogenmod.platform-res.apk",
-  "/proc/ged"
+  "/proc/ged",
+#ifdef PATH_WHITELIST_EXTRA_H
+PATH_WHITELIST_EXTRA_H
+#endif
 };
 
 static const char* kFdPath = "/proc/self/fd";
@@ -259,6 +264,17 @@ class FileDescriptorInfo {
         path.compare(path.size() - kJarSuffix.size(), kJarSuffix.size(), kJarSuffix) == 0) {
       return true;
     }
+
+    if (access("/system/framework/XposedBridge.jar", F_OK ) != -1) {
+      // Xposed-powered Zygote might read from extensions other than .apk
+      // so skip extension check
+      ALOGW("Xposed detected, loosening up Zygote fd check!");
+      static const std::string kDataAppPrefix = "/data/app/";
+      if (path.compare(0, kDataAppPrefix.size(), kDataAppPrefix) == 0) {
+        return true;
+      }
+    }
+
     return false;
   }
 

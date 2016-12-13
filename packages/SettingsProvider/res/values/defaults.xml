@@ -239,5 +239,5 @@
     <integer name="def_captive_portal_detection_enabled" translatable="false">1</integer>
 
     <!-- <string name="config_default_input_method" translatable="false">com.sohu.inputmethod.sogou/.SogouIME</string> -->
-    <string name="config_default_input_method" translatable="false">com.iflytek.inputmethod/.FlyIME</string>
+    <string name="config_default_input_method" translatable="false">com.google.android.inputmethod.pinyin/.PinyinIME</string>
 </resources>
